@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Josh Voice Agent (Web + Calls)",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["voice_agent.py"],
+      "port": 5000
+    },
+    {
+      "name": "Josh Web UI (Chat Only)",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["app.py"],
+      "port": 5000
+    },
+    {
+      "name": "Josh CLI (Terminal)",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["main.py"],
+      "port": null
+    },
+    {
+      "name": "ngrok Tunnel",
+      "runtimeExecutable": "/Users/cameronrosser/ngrok",
+      "runtimeArgs": ["http", "5000"],
+      "port": 4040
+    }
+  ]
+}

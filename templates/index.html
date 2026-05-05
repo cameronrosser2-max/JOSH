@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Josh — AI Sales Rep</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #161a22;
+      --surface2: #1e2330;
+      --border: #2a3040;
+      --accent: #4f8ef7;
+      --accent2: #3ddc97;
+      --danger: #e05c5c;
+      --warn: #f4a642;
+      --text: #e8ecf4;
+      --muted: #6b7894;
+      --josh-bubble: #1e2a42;
+      --user-bubble: #1a2e1a;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .logo {
+      width: 38px; height: 38px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; color: #fff;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 18px; font-weight: 700; }
+    header p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .status-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--muted);
+      margin-left: auto;
+      flex-shrink: 0;
+      transition: background .3s;
+    }
+    .status-dot.live { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+
+    /* ── Tab Bar ── */
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .tab {
+      padding: 10px 22px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all .2s;
+      user-select: none;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* ── Panels ── */
+    .panel { display: none; flex: 1; overflow: hidden; }
+    .panel.active { display: flex; }
+
+    /* ── CALL PANEL ── */
+    #panel-call {
+      flex-direction: column;
+    }
+    .call-top {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      gap: 0;
+    }
+
+    /* Chat */
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .bubble-wrap {
+      display: flex;
+      flex-direction: column;
+      max-width: 74%;
+    }
+    .bubble-wrap.josh { align-self: flex-start; }
+    .bubble-wrap.user { align-self: flex-end; }
+    .bubble-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 4px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .bubble-wrap.user .bubble-label { text-align: right; }
+    .bubble {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .bubble-wrap.josh .bubble {
+      background: var(--josh-bubble);
+      border-top-left-radius: 4px;
+    }
+    .bubble-wrap.user .bubble {
+      background: var(--user-bubble);
+      border-top-right-radius: 4px;
+    }
+    .bubble.speaking { animation: pulse-bubble 1.2s ease-in-out infinite; }
+    @keyframes pulse-bubble {
+      0%,100% { box-shadow: 0 0 0 0 rgba(79,142,247,0); }
+      50% { box-shadow: 0 0 0 4px rgba(79,142,247,.25); }
+    }
+
+    /* Input bar */
+    .chat-input-bar {
+      padding: 14px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+    textarea#msg-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 14px;
+      padding: 10px 14px;
+      resize: none;
+      max-height: 120px;
+      min-height: 44px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color .2s;
+    }
+    textarea#msg-input:focus { border-color: var(--accent); }
+    textarea#msg-input::placeholder { color: var(--muted); }
+
+    .btn {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-danger  { background: var(--danger); color: #fff; }
+    .btn-success { background: var(--accent2); color: #0d0f14; }
+    .btn-ghost   { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+    /* Mic button */
+    .btn-mic {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      transition: all .2s;
+      flex-shrink: 0;
+    }
+    .btn-mic.recording {
+      background: var(--danger);
+      border-color: var(--danger);
+      animation: mic-pulse 1s ease-in-out infinite;
+    }
+    @keyframes mic-pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(224,92,92,0); }
+      50% { box-shadow: 0 0 0 8px rgba(224,92,92,.3); }
+    }
+
+    /* Sidebar */
+    .call-sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      background: var(--surface);
+      padding: 20px 16px;
+      gap: 20px;
+    }
+    .call-sidebar::-webkit-scrollbar { width: 3px; }
+    .call-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+
+    .sidebar-section h3 {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .info-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .info-row label { font-size: 11px; color: var(--muted); }
+    .info-row input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+      padding: 7px 10px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color .2s;
+    }
+    .info-row input:focus { border-color: var(--accent); }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .tag-industry { background: rgba(79,142,247,.15); color: var(--accent); }
+    .tag-outcome-in_progress { background: rgba(107,120,148,.15); color: var(--muted); }
+    .tag-outcome-interested { background: rgba(244,166,66,.15); color: var(--warn); }
+    .tag-outcome-closed { background: rgba(61,220,151,.15); color: var(--accent2); }
+    .tag-outcome-no_answer { background: rgba(224,92,92,.12); color: var(--danger); }
+
+    .call-actions { display: flex; flex-direction: column; gap: 8px; }
+
+    /* Voice toggle */
+    .voice-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+    }
+    .voice-row span { font-size: 12px; color: var(--muted); }
+    .toggle {
+      width: 38px; height: 20px;
+      background: var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      transition: background .2s;
+    }
+    .toggle.on { background: var(--accent); }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      background: #fff;
+      border-radius: 50%;
+      top: 3px; left: 3px;
+      transition: left .2s;
+    }
+    .toggle.on::after { left: 21px; }
+
+    /* Empty state */
+    .empty-chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--muted);
+    }
+    .empty-chat .icon { font-size: 48px; }
+    .empty-chat p { font-size: 14px; }
+
+    /* API key setup */
+    .setup-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      max-width: 420px;
+      width: 90%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .setup-box h2 { font-size: 16px; }
+    .setup-box p { font-size: 13px; color: var(--muted); }
+    .setup-box input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+      font-family: inherit;
+      width: 100%;
+    }
+
+    /* ── LEADS PANEL ── */
+    #panel-leads {
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .leads-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .leads-header h2 { font-size: 16px; font-weight: 700; margin-right: auto; }
+
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      padding: 16px 24px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      min-width: 120px;
+      flex: 1;
+    }
+    .stat-card .val { font-size: 28px; font-weight: 800; }
+    .stat-card .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+    .stat-card.accent .val { color: var(--accent); }
+    .stat-card.green .val { color: var(--accent2); }
+    .stat-card.warn .val { color: var(--warn); }
+
+    .leads-table-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 24px 24px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+    }
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: middle;
+    }
+    tr:hover td { background: var(--surface); }
+    .no-leads { text-align: center; color: var(--muted); padding: 48px; font-size: 14px; }
+
+    /* Scrollbars */
+    .leads-table-wrap::-webkit-scrollbar { width: 4px; }
+    .leads-table-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 10px 14px;
+      background: var(--josh-bubble);
+      border-radius: 16px;
+      border-top-left-radius: 4px;
+      width: fit-content;
+    }
+    .typing-dot {
+      width: 6px; height: 6px;
+      background: var(--muted);
+      border-radius: 50%;
+      animation: typing-bounce .9s ease-in-out infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: .15s; }
+    .typing-dot:nth-child(3) { animation-delay: .3s; }
+    @keyframes typing-bounce {
+      0%,80%,100% { transform: translateY(0); }
+      40% { transform: translateY(-6px); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">J</div>
+  <div>
+    <h1>Josh — AI Sales Rep</h1>
+    <p>HVAC · Plumbing · Electrical · Repair</p>
+  </div>
+  <div class="status-dot" id="status-dot"></div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-tab="call">📞 Call Simulator</div>
+  <div class="tab" data-tab="leads">📋 Leads CRM</div>
+</div>
+
+<!-- ── CALL PANEL ── -->
+<div class="panel active" id="panel-call">
+
+  <!-- API Key Setup (shown if no key) -->
+  <div class="empty-chat" id="setup-screen">
+    <div class="setup-box">
+      <h2>Connect your API key</h2>
+      <p>Enter your Anthropic API key to activate Josh. Your key is never stored.</p>
+      <input type="password" id="api-key-input" placeholder="sk-ant-..." />
+      <button class="btn btn-primary" onclick="saveApiKey()">Start Josh</button>
+    </div>
+  </div>
+
+  <div class="call-top" id="call-screen" style="display:none">
+
+    <!-- Chat -->
+    <div class="chat-area">
+      <div class="chat-messages" id="chat-messages">
+        <div class="empty-chat">
+          <div class="icon">📞</div>
+          <p>Press <strong>New Call</strong> to start a sales simulation</p>
+        </div>
+      </div>
+
+      <div class="chat-input-bar">
+        <button class="btn-mic" id="btn-mic" title="Hold to speak" onclick="toggleMic()" disabled>🎤</button>
+        <textarea id="msg-input" rows="1" placeholder="Type your response..." disabled
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="btn btn-primary" id="btn-send" onclick="sendMessage()" disabled>Send</button>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="call-sidebar">
+
+      <div class="sidebar-section">
+        <h3>Call Controls</h3>
+        <div class="call-actions">
+          <button class="btn btn-primary" id="btn-new-call" onclick="newCall()">New Call</button>
+          <button class="btn btn-danger" id="btn-end-call" onclick="endCall('no_answer')" disabled>End Call</button>
+          <button class="btn btn-success" id="btn-close-deal" onclick="endCall('closed')" disabled>Mark Closed ✓</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Prospect Info</h3>
+        <div class="info-row">
+          <label>Name</label>
+          <input type="text" id="si-name" placeholder="Auto-detected" oninput="pushLeadInfo()" />
+        </div>
+        <div class="info-row">
+          <label>Email</label>
+          <input type="email" id="si-email" placeholder="Auto-detected" oninput="pushLeadInfo()" />
+        </div>
+        <div class="info-row">
+          <label>Business</label>
+          <input type="text" id="si-business" placeholder="Auto-detected" oninput="pushLeadInfo()" />
+        </div>
+        <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+          <span class="tag tag-industry" id="si-industry" style="display:none"></span>
+          <span class="tag" id="si-outcome-tag"></span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Voice</h3>
+        <div class="voice-row">
+          <span>Josh speaks aloud</span>
+          <div class="toggle" id="tts-toggle" onclick="toggleTTS()"></div>
+        </div>
+        <div class="voice-row">
+          <span>Mic input</span>
+          <div class="toggle" id="stt-toggle" onclick="toggleSTT()"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── LEADS PANEL ── -->
+<div class="panel" id="panel-leads">
+  <div style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+    <div class="leads-header">
+      <h2>Lead CRM</h2>
+      <button class="btn btn-ghost" onclick="refreshLeads()">Refresh</button>
+      <button class="btn btn-primary" onclick="exportCSV()">Export CSV</button>
+    </div>
+
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card accent"><div class="val" id="stat-total">—</div><div class="lbl">Total Leads</div></div>
+      <div class="stat-card warn"><div class="val" id="stat-interested">—</div><div class="lbl">Interested</div></div>
+      <div class="stat-card green"><div class="val" id="stat-closed">—</div><div class="lbl">Closed</div></div>
+    </div>
+
+    <div class="leads-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Business</th>
+            <th>Industry</th>
+            <th>Outcome</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="leads-tbody">
+          <tr><td colspan="7" class="no-leads">No leads yet — start a call!</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── State ──
+  const socket = io();
+  let sessionId = null;
+  let ttsEnabled = false;
+  let sttEnabled = false;
+  let isRecording = false;
+  let recognition = null;
+  let apiKey = localStorage.getItem("josh_api_key") || "";
+
+  // ── Init ──
+  window.onload = () => {
+    if (apiKey) showCallScreen();
+    setupSpeechRecognition();
+    refreshLeads();
+  };
+
+  function saveApiKey() {
+    const val = document.getElementById("api-key-input").value.trim();
+    if (!val) return;
+    apiKey = val;
+    localStorage.setItem("josh_api_key", val);
+    showCallScreen();
+  }
+
+  function showCallScreen() {
+    document.getElementById("setup-screen").style.display = "none";
+    document.getElementById("call-screen").style.display = "flex";
+  }
+
+  // ── Tabs ──
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab, .panel").forEach(el => el.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+      if (tab.dataset.tab === "leads") refreshLeads();
+    });
+  });
+
+  // ── Socket.IO ──
+  socket.on("connect", () => setStatus(true));
+  socket.on("disconnect", () => setStatus(false));
+
+  socket.on("josh_message", data => {
+    removeTypingIndicator();
+    appendBubble("josh", data.text);
+    if (data.industry) showIndustryTag(data.industry);
+    if (data.prospect_name) document.getElementById("si-name").placeholder = data.prospect_name;
+
+    if (ttsEnabled) speak(data.text);
+    enableInput();
+  });
+
+  socket.on("call_ended", () => {
+    setCallActive(false);
+    refreshLeads();
+  });
+
+  socket.on("lead_saved", () => refreshLeads());
+
+  socket.on("error", data => {
+    removeTypingIndicator();
+    appendBubble("josh", "⚠️ " + data.message);
+    enableInput();
+  });
+
+  // ── Call Controls ──
+  function newCall() {
+    sessionId = crypto.randomUUID();
+    clearChat();
+    resetSidebar();
+    setCallActive(true);
+    showTypingIndicator();
+    socket.emit("start_call", { session_id: sessionId, api_key: apiKey });
+  }
+
+  function endCall(outcome) {
+    if (!sessionId) return;
+    socket.emit("end_call", { session_id: sessionId, outcome });
+    setCallActive(false);
+    setOutcomeTag(outcome);
+  }
+
+  function sendMessage() {
+    const input = document.getElementById("msg-input");
+    const text = input.value.trim();
+    if (!text || !sessionId) return;
+    appendBubble("user", text);
+    input.value = "";
+    autoResize(input);
+    disableInput();
+    showTypingIndicator();
+    socket.emit("prospect_message", { session_id: sessionId, text });
+  }
+
+  function pushLeadInfo() {
+    if (!sessionId) return;
+    socket.emit("update_lead_info", {
+      session_id: sessionId,
+      name: document.getElementById("si-name").value || null,
+      email: document.getElementById("si-email").value || null,
+      business: document.getElementById("si-business").value || null,
+    });
+  }
+
+  // ── Voice ──
+  function toggleTTS() {
+    ttsEnabled = !ttsEnabled;
+    document.getElementById("tts-toggle").classList.toggle("on", ttsEnabled);
+  }
+
+  function toggleSTT() {
+    sttEnabled = !sttEnabled;
+    document.getElementById("stt-toggle").classList.toggle("on", sttEnabled);
+    document.getElementById("btn-mic").disabled = !sttEnabled;
+  }
+
+  function setupSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onresult = e => {
+      const transcript = e.results[0][0].transcript;
+      document.getElementById("msg-input").value = transcript;
+      autoResize(document.getElementById("msg-input"));
+      sendMessage();
+    };
+    recognition.onend = () => stopMic();
+    recognition.onerror = () => stopMic();
+  }
+
+  function toggleMic() {
+    if (isRecording) {
+      recognition && recognition.stop();
+      stopMic();
+    } else {
+      if (!recognition) return;
+      recognition.start();
+      isRecording = true;
+      document.getElementById("btn-mic").classList.add("recording");
+    }
+  }
+
+  function stopMic() {
+    isRecording = false;
+    document.getElementById("btn-mic").classList.remove("recording");
+  }
+
+  function speak(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = 1.05;
+    utt.pitch = 0.95;
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.name.includes("Google US English") || v.name.includes("Alex") || v.lang === "en-US");
+    if (preferred) utt.voice = preferred;
+    window.speechSynthesis.speak(utt);
+  }
+
+  // ── UI Helpers ──
+  function appendBubble(role, text) {
+    const wrap = document.createElement("div");
+    wrap.className = "bubble-wrap " + role;
+    wrap.innerHTML = `
+      <div class="bubble-label">${role === "josh" ? "Josh" : "You"}</div>
+      <div class="bubble">${escapeHtml(text)}</div>
+    `;
+    const container = document.getElementById("chat-messages");
+    // Remove empty state if present
+    const empty = container.querySelector(".empty-chat");
+    if (empty) empty.remove();
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function showTypingIndicator() {
+    const container = document.getElementById("chat-messages");
+    if (container.querySelector(".typing-indicator-wrap")) return;
+    const wrap = document.createElement("div");
+    wrap.className = "bubble-wrap josh typing-indicator-wrap";
+    wrap.innerHTML = `
+      <div class="bubble-label">Josh</div>
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    `;
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function removeTypingIndicator() {
+    const el = document.querySelector(".typing-indicator-wrap");
+    if (el) el.remove();
+  }
+
+  function clearChat() {
+    document.getElementById("chat-messages").innerHTML = "";
+  }
+
+  function resetSidebar() {
+    ["si-name", "si-email", "si-business"].forEach(id => {
+      document.getElementById(id).value = "";
+      document.getElementById(id).placeholder = "Auto-detected";
+    });
+    document.getElementById("si-industry").style.display = "none";
+    setOutcomeTag("in_progress");
+  }
+
+  function showIndustryTag(name) {
+    const el = document.getElementById("si-industry");
+    el.textContent = name;
+    el.style.display = "inline-block";
+  }
+
+  function setOutcomeTag(outcome) {
+    const el = document.getElementById("si-outcome-tag");
+    const labels = {
+      in_progress: "In Progress",
+      interested: "Interested",
+      closed: "Closed",
+      no_answer: "No Answer",
+    };
+    el.textContent = labels[outcome] || outcome;
+    el.className = "tag tag-outcome-" + outcome;
+  }
+
+  function setCallActive(active) {
+    document.getElementById("btn-new-call").textContent = active ? "Restart Call" : "New Call";
+    document.getElementById("btn-end-call").disabled = !active;
+    document.getElementById("btn-close-deal").disabled = !active;
+    if (active) enableInput(); else disableInput();
+  }
+
+  function enableInput() {
+    document.getElementById("msg-input").disabled = false;
+    document.getElementById("btn-send").disabled = false;
+    document.getElementById("msg-input").focus();
+    if (sttEnabled) document.getElementById("btn-mic").disabled = false;
+  }
+
+  function disableInput() {
+    document.getElementById("msg-input").disabled = true;
+    document.getElementById("btn-send").disabled = true;
+    document.getElementById("btn-mic").disabled = true;
+  }
+
+  function setStatus(online) {
+    document.getElementById("status-dot").classList.toggle("live", online);
+  }
+
+  function handleKey(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function autoResize(el) {
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 120) + "px";
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+              .replace(/"/g,"&quot;").replace(/\n/g,"<br>");
+  }
+
+  // ── Leads CRM ──
+  async function refreshLeads() {
+    const [leadsRes, statsRes] = await Promise.all([
+      fetch("/api/leads"),
+      fetch("/api/stats"),
+    ]);
+    const leads = await leadsRes.json();
+    const stats = await statsRes.json();
+
+    document.getElementById("stat-total").textContent = stats.total;
+    document.getElementById("stat-interested").textContent = stats.interested;
+    document.getElementById("stat-closed").textContent = stats.closed;
+
+    const tbody = document.getElementById("leads-tbody");
+    if (!leads.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="no-leads">No leads yet — start a call!</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = leads.map(l => `
+      <tr>
+        <td style="color:var(--muted)">${l.id}</td>
+        <td>${l.name || "<span style='color:var(--muted)'>—</span>"}</td>
+        <td>${l.email || "<span style='color:var(--muted)'>—</span>"}</td>
+        <td>${l.business || "<span style='color:var(--muted)'>—</span>"}</td>
+        <td>${l.industry ? `<span class="tag tag-industry">${l.industry}</span>` : "—"}</td>
+        <td><span class="tag tag-outcome-${l.outcome}">${l.outcome?.replace("_"," ")}</span></td>
+        <td style="color:var(--muted); font-size:12px">${l.created_at?.slice(0,16).replace("T"," ") || "—"}</td>
+      </tr>
+    `).join("");
+  }
+
+  function exportCSV() {
+    window.location.href = "/api/leads/export";
+  }
+</script>
+</body>
+</html>
