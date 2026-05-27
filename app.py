@@ -6,7 +6,7 @@ from flask import Flask, render_template, request, jsonify, Response
 from flask_socketio import SocketIO, emit, join_room
 
 from agent import JoshAgent
-from crm import init_db, upsert_lead, get_all_leads, get_leads_csv, get_stats
+from crm import init_db, upsert_lead, get_all_leads, get_leads_csv, get_stats, get_lead_by_id
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET", "josh-sales-secret")
@@ -31,9 +31,13 @@ def _sync_crm(session_id: str, agent: JoshAgent, outcome: str = None):
     upsert_lead(session_id, {
         "name": agent.prospect_name,
         "email": agent.prospect_email,
+        "phone": agent.prospect_phone,
         "business": agent.prospect_business,
+        "city": agent.prospect_city,
         "industry": agent.industry["name"] if agent.industry else None,
         "outcome": outcome or agent.outcome,
+        "score": agent.call_score,
+        "stage": agent.stage,
         "conversation": conversation_text,
     })
 
@@ -48,6 +52,23 @@ def index():
 @app.route("/api/leads")
 def api_leads():
     return jsonify(get_all_leads())
+
+
+@app.route("/api/leads/<int:lead_id>")
+def api_lead_detail(lead_id: int):
+    lead = get_lead_by_id(lead_id)
+    if not lead:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify(lead)
+
+
+@app.route("/api/leads/<int:lead_id>/notes", methods=["POST"])
+def api_lead_notes(lead_id: int):
+    from crm import update_lead_notes
+    data = request.get_json(force=True, silent=True) or {}
+    notes = data.get("notes", "")
+    update_lead_notes(lead_id, notes)
+    return jsonify({"ok": True})
 
 
 @app.route("/api/leads/export")
@@ -83,7 +104,12 @@ def handle_start_call(data):
     opening = agent.opening_line()
     _sync_crm(session_id, agent)
 
-    emit("josh_message", {"text": opening, "session_id": session_id})
+    emit("josh_message", {
+        "text": opening,
+        "session_id": session_id,
+        "score": agent.call_score,
+        "stage": agent.stage,
+    })
 
 
 @socketio.on("prospect_message")
@@ -98,20 +124,16 @@ def handle_prospect_message(data):
     agent = sessions[session_id]
     response = agent.chat(text)
 
-    # Detect outcome signals in Josh's response
-    outcome = agent.outcome
-    resp_lower = response.lower()
-    if any(w in resp_lower for w in ["name, email", "lock in your spot", "get this started"]):
-        agent.outcome = "interested"
-        outcome = "interested"
-
-    _sync_crm(session_id, agent, outcome)
+    _sync_crm(session_id, agent)
 
     emit("josh_message", {
         "text": response,
         "session_id": session_id,
         "industry": agent.industry["name"] if agent.industry else None,
         "prospect_name": agent.prospect_name,
+        "score": agent.call_score,
+        "stage": agent.stage,
+        "outcome": agent.outcome,
     })
 
 

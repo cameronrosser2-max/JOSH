@@ -1,12 +1,14 @@
 import os
-from dotenv import dotenv_values
+from pathlib import Path
+from dotenv import load_dotenv
 
-# Load .env locally; on Railway env vars are injected automatically
-_env = dotenv_values("/Users/cameronrosser/ai-sales-agent/.env")
+# Load .env from project root (works locally); Railway injects env vars directly
+load_dotenv(Path(__file__).parent / ".env")
+
 
 def _get(key, default=""):
-    # Railway injects env vars directly into os.environ — check both
-    return _env.get(key) or os.environ.get(key, default)
+    return os.environ.get(key, default)
+
 
 ANTHROPIC_API_KEY    = _get("ANTHROPIC_API_KEY")
 TWILIO_ACCOUNT_SID   = _get("TWILIO_ACCOUNT_SID")

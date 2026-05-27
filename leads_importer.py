@@ -30,24 +30,28 @@ def detect_industry_from_name(business_name: str):
     """Detect industry from business name string."""
     name = business_name.lower()
 
-    hvac_words = ["hvac", "heating", "cooling", "air condition", "ac ", " ac", "furnace", "heat pump"]
-    plumb_words = ["plumb", "pipe", "drain", "sewer", "water heater"]
-    elec_words  = ["electric", "wiring", "electrical", "power"]
-    repair_words = ["repair", "mechanic", "auto", "appliance", "phone fix",
-                    "barber", "barbershop", "salon", "shop", "fix"]
+    checks = [
+        ("hvac",             ["hvac", "heating", "cooling", "air condition", "furnace", "heat pump"]),
+        ("electrician",      ["electric", "wiring", "electrical"]),
+        ("plumbing",         ["plumb", "pipe", "drain", "sewer", "water heater"]),
+        ("roofing",          ["roof", "roofing", "shingle", "gutter", "siding"]),
+        ("landscaping",      ["landscap", "lawn", "mowing", "irrigation", "sprinkler", "hardscape"]),
+        ("painting",         ["paint", "painting", "painter"]),
+        ("pest_control",     ["pest", "exterminator", "termite", "bed bug", "rodent"]),
+        ("pressure_washing", ["pressure wash", "power wash", "soft wash"]),
+        ("cleaning",         ["cleaning service", "maid", "janitorial", "housekeeping"]),
+        ("concrete",         ["concrete", "paving", "asphalt", "masonry"]),
+        ("fencing",          ["fencing", "fence", "railing"]),
+        ("garage_door",      ["garage door", "overhead door"]),
+        ("pool",             ["pool service", "pool clean", "pool repair", "pool build", "spa service"]),
+        ("tree_service",     ["tree service", "tree removal", "tree trimming", "arborist", "stump"]),
+        ("repair",           ["repair", "mechanic", "auto shop", "appliance", "handyman"]),
+    ]
 
-    for w in hvac_words:
-        if w in name:
-            return "hvac"
-    for w in elec_words:
-        if w in name:
-            return "electrician"
-    for w in plumb_words:
-        if w in name:
-            return "plumbing"
-    for w in repair_words:
-        if w in name:
-            return "repair"
+    for industry, keywords in checks:
+        for kw in keywords:
+            if kw in name:
+                return industry
     return "general"
 
 

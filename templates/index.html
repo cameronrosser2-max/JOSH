@@ -17,6 +17,7 @@
       --accent2: #3ddc97;
       --danger: #e05c5c;
       --warn: #f4a642;
+      --purple: #a78bfa;
       --text: #e8ecf4;
       --muted: #6b7894;
       --josh-bubble: #1e2a42;
@@ -33,28 +34,28 @@
       overflow: hidden;
     }
 
-    /* ── Header ── */
+    /* Header */
     header {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 14px 24px;
+      padding: 13px 22px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
     .logo {
-      width: 38px; height: 38px;
-      background: var(--accent);
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 16px; color: #fff;
+      font-weight: 800; font-size: 15px; color: #fff;
       flex-shrink: 0;
     }
-    header h1 { font-size: 18px; font-weight: 700; }
-    header p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    header h1 { font-size: 17px; font-weight: 700; }
+    header p { font-size: 11px; color: var(--muted); margin-top: 1px; }
     .status-dot {
-      width: 9px; height: 9px; border-radius: 50%;
+      width: 8px; height: 8px; border-radius: 50%;
       background: var(--muted);
       margin-left: auto;
       flex-shrink: 0;
@@ -62,7 +63,7 @@
     }
     .status-dot.live { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
 
-    /* ── Tab Bar ── */
+    /* Tabs */
     .tabs {
       display: flex;
       background: var(--surface);
@@ -71,8 +72,7 @@
     }
     .tab {
       padding: 10px 22px;
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 13px; font-weight: 600;
       color: var(--muted);
       cursor: pointer;
       border-bottom: 2px solid transparent;
@@ -82,20 +82,13 @@
     .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
     .tab:hover:not(.active) { color: var(--text); }
 
-    /* ── Panels ── */
+    /* Panels */
     .panel { display: none; flex: 1; overflow: hidden; }
     .panel.active { display: flex; }
 
     /* ── CALL PANEL ── */
-    #panel-call {
-      flex-direction: column;
-    }
-    .call-top {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-      gap: 0;
-    }
+    #panel-call { flex-direction: column; }
+    .call-top { display: flex; flex: 1; overflow: hidden; }
 
     /* Chat */
     .chat-area {
@@ -108,7 +101,7 @@
     .chat-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 20px;
+      padding: 18px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -117,45 +110,18 @@
     .chat-messages::-webkit-scrollbar { width: 4px; }
     .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-    .bubble-wrap {
-      display: flex;
-      flex-direction: column;
-      max-width: 74%;
-    }
+    .bubble-wrap { display: flex; flex-direction: column; max-width: 74%; }
     .bubble-wrap.josh { align-self: flex-start; }
     .bubble-wrap.user { align-self: flex-end; }
-    .bubble-label {
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--muted);
-      margin-bottom: 4px;
-      letter-spacing: .5px;
-      text-transform: uppercase;
-    }
+    .bubble-label { font-size: 10px; font-weight: 600; color: var(--muted); margin-bottom: 4px; letter-spacing: .5px; text-transform: uppercase; }
     .bubble-wrap.user .bubble-label { text-align: right; }
-    .bubble {
-      padding: 12px 16px;
-      border-radius: 16px;
-      font-size: 14px;
-      line-height: 1.55;
-    }
-    .bubble-wrap.josh .bubble {
-      background: var(--josh-bubble);
-      border-top-left-radius: 4px;
-    }
-    .bubble-wrap.user .bubble {
-      background: var(--user-bubble);
-      border-top-right-radius: 4px;
-    }
-    .bubble.speaking { animation: pulse-bubble 1.2s ease-in-out infinite; }
-    @keyframes pulse-bubble {
-      0%,100% { box-shadow: 0 0 0 0 rgba(79,142,247,0); }
-      50% { box-shadow: 0 0 0 4px rgba(79,142,247,.25); }
-    }
+    .bubble { padding: 11px 15px; border-radius: 16px; font-size: 14px; line-height: 1.55; }
+    .bubble-wrap.josh .bubble { background: var(--josh-bubble); border-top-left-radius: 4px; }
+    .bubble-wrap.user .bubble { background: var(--user-bubble); border-top-right-radius: 4px; }
 
     /* Input bar */
     .chat-input-bar {
-      padding: 14px 16px;
+      padding: 12px 14px;
       background: var(--surface);
       border-top: 1px solid var(--border);
       display: flex;
@@ -170,10 +136,10 @@
       border-radius: 10px;
       color: var(--text);
       font-size: 14px;
-      padding: 10px 14px;
+      padding: 9px 13px;
       resize: none;
       max-height: 120px;
-      min-height: 44px;
+      min-height: 42px;
       outline: none;
       font-family: inherit;
       transition: border-color .2s;
@@ -182,11 +148,9 @@
     textarea#msg-input::placeholder { color: var(--muted); }
 
     .btn {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 600;
+      padding: 9px 16px;
+      border: none; border-radius: 10px;
+      font-size: 13px; font-weight: 600;
       cursor: pointer;
       transition: opacity .2s, transform .1s;
     }
@@ -196,15 +160,15 @@
     .btn-danger  { background: var(--danger); color: #fff; }
     .btn-success { background: var(--accent2); color: #0d0f14; }
     .btn-ghost   { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-sm      { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
 
     /* Mic button */
     .btn-mic {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      border: none;
+      width: 42px; height: 42px;
+      border-radius: 50%; border: none;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
+      font-size: 17px;
       background: var(--surface2);
       border: 1px solid var(--border);
       transition: all .2s;
@@ -222,32 +186,24 @@
 
     /* Sidebar */
     .call-sidebar {
-      width: 260px;
+      width: 250px;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
-      padding: 20px 16px;
-      gap: 20px;
+      padding: 18px 14px;
+      gap: 18px;
     }
     .call-sidebar::-webkit-scrollbar { width: 3px; }
     .call-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
 
     .sidebar-section h3 {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      color: var(--muted);
-      margin-bottom: 10px;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .8px;
+      color: var(--muted); margin-bottom: 10px;
     }
-    .info-row {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
+    .info-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
     .info-row label { font-size: 11px; color: var(--muted); }
     .info-row input {
       background: var(--surface2);
@@ -262,50 +218,64 @@
     }
     .info-row input:focus { border-color: var(--accent); }
 
+    /* Score meter */
+    .score-meter { display: flex; flex-direction: column; gap: 6px; }
+    .score-meter-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+    .score-meter-val { font-weight: 700; font-size: 13px; }
+    .score-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 3px; transition: width .5s, background .5s; }
+
+    /* Stage indicator */
+    .stage-steps { display: flex; flex-direction: column; gap: 4px; }
+    .stage-step { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+    .stage-step.active { color: var(--accent); font-weight: 600; }
+    .stage-step.done { color: var(--accent2); }
+    .stage-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+    .stage-step.active .stage-dot { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+    .stage-step.done .stage-dot { background: var(--accent2); }
+
     .tag {
       display: inline-block;
-      padding: 3px 9px;
+      padding: 2px 8px;
       border-radius: 20px;
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 11px; font-weight: 600;
     }
-    .tag-industry { background: rgba(79,142,247,.15); color: var(--accent); }
-    .tag-outcome-in_progress { background: rgba(107,120,148,.15); color: var(--muted); }
-    .tag-outcome-interested { background: rgba(244,166,66,.15); color: var(--warn); }
-    .tag-outcome-closed { background: rgba(61,220,151,.15); color: var(--accent2); }
-    .tag-outcome-no_answer { background: rgba(224,92,92,.12); color: var(--danger); }
+    .t-blue { background: rgba(79,142,247,.15); color: var(--accent); }
+    .t-green { background: rgba(61,220,151,.15); color: var(--accent2); }
+    .t-warn { background: rgba(244,166,66,.15); color: var(--warn); }
+    .t-red { background: rgba(224,92,92,.12); color: var(--danger); }
+    .t-muted { background: rgba(107,120,148,.15); color: var(--muted); }
+    .t-purple { background: rgba(167,139,250,.15); color: var(--purple); }
 
     .call-actions { display: flex; flex-direction: column; gap: 8px; }
 
     /* Voice toggle */
     .voice-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 0;
       border-top: 1px solid var(--border);
-      margin-top: 4px;
     }
     .voice-row span { font-size: 12px; color: var(--muted); }
     .toggle {
-      width: 38px; height: 20px;
+      width: 36px; height: 19px;
       background: var(--border);
       border-radius: 10px;
       cursor: pointer;
       position: relative;
       transition: background .2s;
+      flex-shrink: 0;
     }
     .toggle.on { background: var(--accent); }
     .toggle::after {
       content: '';
       position: absolute;
-      width: 14px; height: 14px;
+      width: 13px; height: 13px;
       background: #fff;
       border-radius: 50%;
       top: 3px; left: 3px;
       transition: left .2s;
     }
-    .toggle.on::after { left: 21px; }
+    .toggle.on::after { left: 20px; }
 
     /* Empty state */
     .empty-chat {
@@ -326,7 +296,7 @@
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 24px;
-      max-width: 420px;
+      max-width: 400px;
       width: 90%;
       display: flex;
       flex-direction: column;
@@ -344,104 +314,94 @@
       outline: none;
       font-family: inherit;
       width: 100%;
+      transition: border-color .2s;
     }
+    .setup-box input:focus { border-color: var(--accent); }
 
     /* ── LEADS PANEL ── */
-    #panel-leads {
-      flex-direction: column;
-      overflow: hidden;
-    }
+    #panel-leads { flex-direction: column; overflow: hidden; }
     .leads-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px 24px;
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 22px;
       border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-      flex-wrap: wrap;
+      flex-shrink: 0; flex-wrap: wrap;
     }
     .leads-header h2 { font-size: 16px; font-weight: 700; margin-right: auto; }
 
     .stats-row {
-      display: flex;
-      gap: 12px;
-      padding: 16px 24px;
-      flex-shrink: 0;
-      flex-wrap: wrap;
+      display: flex; gap: 12px;
+      padding: 14px 22px;
+      flex-shrink: 0; flex-wrap: wrap;
     }
     .stat-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 14px 20px;
-      min-width: 120px;
+      padding: 12px 18px;
+      min-width: 110px;
       flex: 1;
     }
-    .stat-card .val { font-size: 28px; font-weight: 800; }
-    .stat-card .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+    .stat-card .val { font-size: 26px; font-weight: 800; }
+    .stat-card .lbl { font-size: 10px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
     .stat-card.accent .val { color: var(--accent); }
     .stat-card.green .val { color: var(--accent2); }
     .stat-card.warn .val { color: var(--warn); }
+    .stat-card.purple .val { color: var(--purple); }
 
-    .leads-table-wrap {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0 24px 24px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
+    /* Search */
+    .search-bar { position: relative; }
+    .search-bar input { padding-left: 30px; }
+    .search-bar::before { content: '🔍'; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; pointer-events: none; }
+
+    .leads-table-wrap { flex: 1; overflow-y: auto; padding: 0 22px 22px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th {
-      text-align: left;
-      padding: 10px 12px;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .5px;
+      text-align: left; padding: 9px 12px;
+      color: var(--muted); font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .5px;
       border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
+      position: sticky; top: 0;
       background: var(--bg);
     }
-    td {
-      padding: 11px 12px;
-      border-bottom: 1px solid var(--border);
-      color: var(--text);
-      vertical-align: middle;
-    }
-    tr:hover td { background: var(--surface); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:hover td { background: var(--surface); cursor: pointer; }
     .no-leads { text-align: center; color: var(--muted); padding: 48px; font-size: 14px; }
-
-    /* Scrollbars */
     .leads-table-wrap::-webkit-scrollbar { width: 4px; }
     .leads-table-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+    /* Score bar */
+    .score-bar { display: flex; align-items: center; gap: 6px; min-width: 80px; }
+    .score-track { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .score-fill-sm { height: 100%; border-radius: 2px; transition: width .4s; }
+    .score-num { font-size: 11px; font-weight: 700; min-width: 22px; text-align: right; }
+
     /* Typing indicator */
-    .typing-indicator {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      padding: 10px 14px;
-      background: var(--josh-bubble);
-      border-radius: 16px;
-      border-top-left-radius: 4px;
-      width: fit-content;
-    }
-    .typing-dot {
-      width: 6px; height: 6px;
-      background: var(--muted);
-      border-radius: 50%;
-      animation: typing-bounce .9s ease-in-out infinite;
-    }
+    .typing-indicator { display: flex; gap: 4px; align-items: center; padding: 10px 14px; background: var(--josh-bubble); border-radius: 16px; border-top-left-radius: 4px; width: fit-content; }
+    .typing-dot { width: 6px; height: 6px; background: var(--muted); border-radius: 50%; animation: typing-bounce .9s ease-in-out infinite; }
     .typing-dot:nth-child(2) { animation-delay: .15s; }
     .typing-dot:nth-child(3) { animation-delay: .3s; }
-    @keyframes typing-bounce {
-      0%,80%,100% { transform: translateY(0); }
-      40% { transform: translateY(-6px); }
-    }
+    @keyframes typing-bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-6px); } }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 680px; max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 24px 80px rgba(0,0,0,.6); }
+    .modal-header { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .modal-header h2 { font-size: 15px; font-weight: 700; margin-right: auto; }
+    .modal-meta { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.6; }
+    .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; line-height: 1; padding: 2px; flex-shrink: 0; }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { flex: 1; overflow-y: auto; padding: 18px; }
+    .modal-body::-webkit-scrollbar { width: 4px; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); }
+    .transcript { display: flex; flex-direction: column; gap: 10px; }
+    .t-line { display: flex; gap: 10px; align-items: flex-start; }
+    .t-name { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; min-width: 60px; padding-top: 2px; flex-shrink: 0; }
+    .t-line.josh .t-name { color: var(--accent); }
+    .t-line.prospect .t-name { color: var(--accent2); }
+    .t-text { font-size: 13px; line-height: 1.55; color: var(--text); background: var(--surface2); padding: 8px 12px; border-radius: 10px; flex: 1; }
+    .t-line.josh .t-text { border-top-left-radius: 2px; }
+    .t-line.prospect .t-text { border-top-right-radius: 2px; }
   </style>
 </head>
 <body>
@@ -450,7 +410,7 @@
   <div class="logo">J</div>
   <div>
     <h1>Josh — AI Sales Rep</h1>
-    <p>HVAC · Plumbing · Electrical · Repair</p>
+    <p>HVAC · Plumbing · Electrical · Roofing · Landscaping · and more</p>
   </div>
   <div class="status-dot" id="status-dot"></div>
 </header>
@@ -463,11 +423,10 @@
 <!-- ── CALL PANEL ── -->
 <div class="panel active" id="panel-call">
 
-  <!-- API Key Setup (shown if no key) -->
   <div class="empty-chat" id="setup-screen">
     <div class="setup-box">
       <h2>Connect your API key</h2>
-      <p>Enter your Anthropic API key to activate Josh. Your key is never stored.</p>
+      <p>Enter your Anthropic API key to activate Josh. Your key is stored locally in your browser.</p>
       <input type="password" id="api-key-input" placeholder="sk-ant-..." />
       <button class="btn btn-primary" onclick="saveApiKey()">Start Josh</button>
     </div>
@@ -505,6 +464,30 @@
       </div>
 
       <div class="sidebar-section">
+        <h3>Lead Score</h3>
+        <div class="score-meter">
+          <div class="score-meter-label">
+            <span id="score-stage-label">Opening</span>
+            <span class="score-meter-val" id="score-val">25</span>
+          </div>
+          <div class="score-track">
+            <div class="score-fill" id="score-fill" style="width:25%;background:#4a5570"></div>
+          </div>
+        </div>
+
+        <div class="stage-steps" id="stage-steps" style="margin-top:10px">
+          <div class="stage-step active" data-stage="opening"><div class="stage-dot"></div>Opening</div>
+          <div class="stage-step" data-stage="discovery"><div class="stage-dot"></div>Discovery</div>
+          <div class="stage-step" data-stage="agitation"><div class="stage-dot"></div>Agitation</div>
+          <div class="stage-step" data-stage="pitch"><div class="stage-dot"></div>Pitch</div>
+          <div class="stage-step" data-stage="trial_close"><div class="stage-dot"></div>Trial Close</div>
+          <div class="stage-step" data-stage="price"><div class="stage-dot"></div>Price</div>
+          <div class="stage-step" data-stage="close"><div class="stage-dot"></div>Close</div>
+          <div class="stage-step" data-stage="intake"><div class="stage-dot"></div>Intake</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
         <h3>Prospect Info</h3>
         <div class="info-row">
           <label>Name</label>
@@ -519,7 +502,7 @@
           <input type="text" id="si-business" placeholder="Auto-detected" oninput="pushLeadInfo()" />
         </div>
         <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
-          <span class="tag tag-industry" id="si-industry" style="display:none"></span>
+          <span class="tag t-blue" id="si-industry" style="display:none"></span>
           <span class="tag" id="si-outcome-tag"></span>
         </div>
       </div>
@@ -545,14 +528,18 @@
   <div style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
     <div class="leads-header">
       <h2>Lead CRM</h2>
-      <button class="btn btn-ghost" onclick="refreshLeads()">Refresh</button>
-      <button class="btn btn-primary" onclick="exportCSV()">Export CSV</button>
+      <div class="search-bar" style="flex:1;max-width:240px">
+        <input type="text" id="lead-search" placeholder="Search..." oninput="filterLeads()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;padding:6px 10px 6px 28px;outline:none" />
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="refreshLeads()">Refresh</button>
+      <button class="btn btn-primary btn-sm" onclick="exportCSV()">Export CSV</button>
     </div>
 
     <div class="stats-row" id="stats-row">
-      <div class="stat-card accent"><div class="val" id="stat-total">—</div><div class="lbl">Total Leads</div></div>
+      <div class="stat-card accent"><div class="val" id="stat-total">—</div><div class="lbl">Total</div></div>
       <div class="stat-card warn"><div class="val" id="stat-interested">—</div><div class="lbl">Interested</div></div>
       <div class="stat-card green"><div class="val" id="stat-closed">—</div><div class="lbl">Closed</div></div>
+      <div class="stat-card purple"><div class="val" id="stat-rate">—</div><div class="lbl">Close Rate</div></div>
     </div>
 
     <div class="leads-table-wrap">
@@ -560,10 +547,10 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>Name</th>
-            <th>Email</th>
             <th>Business</th>
+            <th>Name / Email</th>
             <th>Industry</th>
+            <th>Score</th>
             <th>Outcome</th>
             <th>Date</th>
           </tr>
@@ -572,6 +559,23 @@
           <tr><td colspan="7" class="no-leads">No leads yet — start a call!</td></tr>
         </tbody>
       </table>
+    </div>
+    <p style="font-size:11px;color:var(--muted);padding:8px 22px">Click any row to view the full conversation.</p>
+  </div>
+</div>
+
+<!-- Conversation modal -->
+<div class="modal-backdrop" id="lead-modal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div style="flex:1">
+        <h2 id="lm-title">Conversation</h2>
+        <div class="modal-meta" id="lm-meta"></div>
+      </div>
+      <button class="modal-close" id="modal-close-btn">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="transcript" id="lm-transcript"></div>
     </div>
   </div>
 </div>
@@ -585,6 +589,9 @@
   let isRecording = false;
   let recognition = null;
   let apiKey = localStorage.getItem("josh_api_key") || "";
+  let _allLeads = [];
+
+  const STAGE_ORDER = ['opening','discovery','agitation','pitch','trial_close','price','close','intake','objection'];
 
   // ── Init ──
   window.onload = () => {
@@ -625,7 +632,9 @@
     appendBubble("josh", data.text);
     if (data.industry) showIndustryTag(data.industry);
     if (data.prospect_name) document.getElementById("si-name").placeholder = data.prospect_name;
-
+    if (data.score != null) updateScore(data.score);
+    if (data.stage) updateStage(data.stage);
+    if (data.outcome) setOutcomeTag(data.outcome);
     if (ttsEnabled) speak(data.text);
     enableInput();
   });
@@ -682,6 +691,31 @@
     });
   }
 
+  // ── Score & Stage ──
+  function updateScore(score) {
+    const s = Math.max(0, Math.min(100, score));
+    let color = '#4a5570';
+    if (s >= 80) color = '#3ddc97';
+    else if (s >= 60) color = '#f4a642';
+    else if (s >= 40) color = '#4f8ef7';
+    document.getElementById('score-val').textContent = s;
+    const fill = document.getElementById('score-fill');
+    fill.style.width = s + '%';
+    fill.style.background = color;
+  }
+
+  function updateStage(stage) {
+    document.getElementById('score-stage-label').textContent = stage.replace('_',' ');
+    const stageIdx = STAGE_ORDER.indexOf(stage);
+    document.querySelectorAll('.stage-step').forEach((el, i) => {
+      const elStage = el.dataset.stage;
+      const elIdx = STAGE_ORDER.indexOf(elStage);
+      el.classList.remove('active','done');
+      if (elStage === stage) el.classList.add('active');
+      else if (stageIdx >= 0 && elIdx < stageIdx) el.classList.add('done');
+    });
+  }
+
   // ── Voice ──
   function toggleTTS() {
     ttsEnabled = !ttsEnabled;
@@ -701,7 +735,6 @@
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = "en-US";
-
     recognition.onresult = e => {
       const transcript = e.results[0][0].transcript;
       document.getElementById("msg-input").value = transcript;
@@ -713,10 +746,8 @@
   }
 
   function toggleMic() {
-    if (isRecording) {
-      recognition && recognition.stop();
-      stopMic();
-    } else {
+    if (isRecording) { recognition && recognition.stop(); stopMic(); }
+    else {
       if (!recognition) return;
       recognition.start();
       isRecording = true;
@@ -733,8 +764,7 @@
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text);
-    utt.rate = 1.05;
-    utt.pitch = 0.95;
+    utt.rate = 1.05; utt.pitch = 0.95;
     const voices = window.speechSynthesis.getVoices();
     const preferred = voices.find(v => v.name.includes("Google US English") || v.name.includes("Alex") || v.lang === "en-US");
     if (preferred) utt.voice = preferred;
@@ -750,7 +780,6 @@
       <div class="bubble">${escapeHtml(text)}</div>
     `;
     const container = document.getElementById("chat-messages");
-    // Remove empty state if present
     const empty = container.querySelector(".empty-chat");
     if (empty) empty.remove();
     container.appendChild(wrap);
@@ -762,14 +791,7 @@
     if (container.querySelector(".typing-indicator-wrap")) return;
     const wrap = document.createElement("div");
     wrap.className = "bubble-wrap josh typing-indicator-wrap";
-    wrap.innerHTML = `
-      <div class="bubble-label">Josh</div>
-      <div class="typing-indicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-      </div>
-    `;
+    wrap.innerHTML = `<div class="bubble-label">Josh</div><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
     container.appendChild(wrap);
     container.scrollTop = container.scrollHeight;
   }
@@ -779,35 +801,31 @@
     if (el) el.remove();
   }
 
-  function clearChat() {
-    document.getElementById("chat-messages").innerHTML = "";
-  }
+  function clearChat() { document.getElementById("chat-messages").innerHTML = ""; }
 
   function resetSidebar() {
-    ["si-name", "si-email", "si-business"].forEach(id => {
+    ["si-name","si-email","si-business"].forEach(id => {
       document.getElementById(id).value = "";
       document.getElementById(id).placeholder = "Auto-detected";
     });
     document.getElementById("si-industry").style.display = "none";
     setOutcomeTag("in_progress");
+    updateScore(25);
+    updateStage("opening");
   }
 
   function showIndustryTag(name) {
     const el = document.getElementById("si-industry");
-    el.textContent = name;
+    el.textContent = name.replace(/_/g,' ');
     el.style.display = "inline-block";
   }
 
   function setOutcomeTag(outcome) {
     const el = document.getElementById("si-outcome-tag");
-    const labels = {
-      in_progress: "In Progress",
-      interested: "Interested",
-      closed: "Closed",
-      no_answer: "No Answer",
-    };
+    const labels = { in_progress:"In Progress", interested:"Interested", closed:"Closed ✓", no_answer:"No Answer" };
+    const cls = { in_progress:"t-muted", interested:"t-warn", closed:"t-green", no_answer:"t-red" };
     el.textContent = labels[outcome] || outcome;
-    el.className = "tag tag-outcome-" + outcome;
+    el.className = "tag " + (cls[outcome] || "t-muted");
   }
 
   function setCallActive(active) {
@@ -830,15 +848,10 @@
     document.getElementById("btn-mic").disabled = true;
   }
 
-  function setStatus(online) {
-    document.getElementById("status-dot").classList.toggle("live", online);
-  }
+  function setStatus(online) { document.getElementById("status-dot").classList.toggle("live", online); }
 
   function handleKey(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   }
 
   function autoResize(el) {
@@ -847,8 +860,7 @@
   }
 
   function escapeHtml(str) {
-    return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-              .replace(/"/g,"&quot;").replace(/\n/g,"<br>");
+    return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\n/g,"<br>");
   }
 
   // ── Leads CRM ──
@@ -857,35 +869,112 @@
       fetch("/api/leads"),
       fetch("/api/stats"),
     ]);
-    const leads = await leadsRes.json();
+    _allLeads = await leadsRes.json();
     const stats = await statsRes.json();
 
     document.getElementById("stat-total").textContent = stats.total;
     document.getElementById("stat-interested").textContent = stats.interested;
     document.getElementById("stat-closed").textContent = stats.closed;
+    document.getElementById("stat-rate").textContent = stats.conversion_rate ? stats.conversion_rate + '%' : '0%';
 
+    renderLeadsTable(_allLeads);
+  }
+
+  function renderLeadsTable(leads) {
     const tbody = document.getElementById("leads-tbody");
-    if (!leads.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="no-leads">No leads yet — start a call!</td></tr>';
-      return;
-    }
+    if (!leads.length) { tbody.innerHTML = '<tr><td colspan="7" class="no-leads">No leads yet — start a call!</td></tr>'; return; }
 
-    tbody.innerHTML = leads.map(l => `
-      <tr>
+    const INDUSTRY_COLORS = { hvac:'t-blue', plumbing:'t-blue', electrician:'t-warn', roofing:'t-warn', landscaping:'t-green', painting:'t-purple', pest_control:'t-red', pressure_washing:'t-blue', cleaning:'t-green', concrete:'t-muted', fencing:'t-muted', garage_door:'t-warn', pool:'t-blue', tree_service:'t-green', repair:'t-purple' };
+
+    tbody.innerHTML = leads.map(l => {
+      const score = l.score != null ? Math.max(0,Math.min(100,l.score)) : null;
+      let scoreColor = '#4a5570';
+      if (score >= 80) scoreColor = '#3ddc97';
+      else if (score >= 60) scoreColor = '#f4a642';
+      else if (score >= 40) scoreColor = '#4f8ef7';
+
+      const scoreHtml = score != null
+        ? `<div class="score-bar"><div class="score-track"><div class="score-fill-sm" style="width:${score}%;background:${scoreColor}"></div></div><span class="score-num" style="color:${scoreColor}">${score}</span></div>`
+        : '—';
+
+      const outcomeClass = { closed:'t-green', interested:'t-warn', in_progress:'t-muted', no_answer:'t-red' }[l.outcome] || 't-muted';
+      const outcomeLabel = { closed:'Closed ✓', interested:'Interested', in_progress:'In Progress', no_answer:'No Answer' }[l.outcome] || l.outcome;
+
+      const indCls = INDUSTRY_COLORS[l.industry] || 't-muted';
+
+      return `<tr onclick="openLeadModal(${l.id})">
         <td style="color:var(--muted)">${l.id}</td>
-        <td>${l.name || "<span style='color:var(--muted)'>—</span>"}</td>
-        <td>${l.email || "<span style='color:var(--muted)'>—</span>"}</td>
         <td>${l.business || "<span style='color:var(--muted)'>—</span>"}</td>
-        <td>${l.industry ? `<span class="tag tag-industry">${l.industry}</span>` : "—"}</td>
-        <td><span class="tag tag-outcome-${l.outcome}">${l.outcome?.replace("_"," ")}</span></td>
-        <td style="color:var(--muted); font-size:12px">${l.created_at?.slice(0,16).replace("T"," ") || "—"}</td>
-      </tr>
-    `).join("");
+        <td style="font-size:12px">${l.name||'—'}<br><span style="color:var(--muted)">${l.email||'—'}</span></td>
+        <td>${l.industry ? `<span class="tag ${indCls}">${l.industry.replace(/_/g,' ')}</span>` : '—'}</td>
+        <td>${scoreHtml}</td>
+        <td><span class="tag ${outcomeClass}">${outcomeLabel}</span></td>
+        <td style="color:var(--muted); font-size:11px">${l.created_at?.slice(0,16).replace("T"," ") || "—"}</td>
+      </tr>`;
+    }).join("");
   }
 
-  function exportCSV() {
-    window.location.href = "/api/leads/export";
+  function filterLeads() {
+    const q = (document.getElementById('lead-search').value || '').toLowerCase();
+    const filtered = !q ? _allLeads : _allLeads.filter(l =>
+      [l.name,l.email,l.business,l.industry].some(v => v && v.toLowerCase().includes(q))
+    );
+    renderLeadsTable(filtered);
   }
+
+  function exportCSV() { window.location.href = "/api/leads/export"; }
+
+  // ── Lead Modal ──
+  async function openLeadModal(leadId) {
+    const r = await fetch(`/api/leads/${leadId}`);
+    const lead = await r.json();
+    if (lead.error) return;
+
+    document.getElementById('lm-title').textContent = lead.business || `Lead #${leadId}`;
+
+    const parts = [
+      lead.name ? `<strong>${lead.name}</strong>` : null,
+      lead.email ? lead.email : null,
+      lead.outcome ? `<span class="tag ${{closed:'t-green',interested:'t-warn',in_progress:'t-muted',no_answer:'t-red'}[lead.outcome]||'t-muted'}">${lead.outcome.replace('_',' ')}</span>` : null,
+      lead.score != null ? `Score: ${lead.score}` : null,
+    ].filter(Boolean);
+    document.getElementById('lm-meta').innerHTML = parts.join(' &nbsp;·&nbsp; ');
+
+    const conv = lead.conversation || '';
+    const lines = conv.split('\n').filter(l => l.trim());
+    const html = lines.map(line => {
+      const role = line.startsWith('Josh:') ? 'josh' : 'prospect';
+      const name = line.startsWith('Josh:') ? 'Josh' : 'Prospect';
+      const text = line.replace(/^(Josh|Prospect|Caller):\s*/, '');
+      if (!text.trim() || text.startsWith('[')) return '';
+      return `<div class="t-line ${role}"><span class="t-name">${name}</span><div class="t-text">${escapeHtml(text)}</div></div>`;
+    }).filter(Boolean).join('');
+
+    document.getElementById('lm-transcript').innerHTML = html ||
+      '<div style="color:var(--muted);font-size:13px">No transcript available.</div>';
+
+    document.getElementById('lead-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  document.getElementById('lead-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('lead-modal')) {
+      document.getElementById('lead-modal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+
+  document.getElementById('modal-close-btn').onclick = () => {
+    document.getElementById('lead-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.getElementById('lead-modal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
 </script>
 </body>
 </html>

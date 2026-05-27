@@ -156,9 +156,13 @@ class CallSession:
         self.conversation = []
         self.prospect_name = None
         self.prospect_email = None
+        self.prospect_phone = None
         self.prospect_business = business_name
         self.prospect_address = address
+        self.prospect_city = None
         self.outcome = "in_progress"
+        self.call_score = 25
+        self.stage = "opening"
         self.anthropic = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         self.xi_client = ElevenLabsClient(api_key=ELEVENLABS_API_KEY) if ELEVENLABS_API_KEY else None
         self.created_at = time.time()
@@ -270,18 +274,50 @@ class CallSession:
             print(f"[ElevenLabs error] {e}")
             return None
 
+    def _update_score(self, text: str):
+        import re as _re
+        HIGH_BUY = _re.compile(
+            r"how much|what.*(cost|price|charge|run me)|sounds good|let.?s do it|i.?m in|go ahead|yes.*$|my email is",
+            _re.I)
+        MED_BUY = _re.compile(
+            r"tell me more|how does it work|how long|when can|makes sense|i hear you|yeah|right|exactly",
+            _re.I)
+        HIGH_NO = _re.compile(
+            r"not interested|no thanks|goodbye|bye|hang up|stop calling|don.?t call",
+            _re.I)
+        MED_NO = _re.compile(
+            r"too expensive|can.?t afford|already have|got a guy|don.?t need",
+            _re.I)
+        LOW_NO = _re.compile(r"think about it|maybe later|too busy|send me", _re.I)
+
+        if HIGH_BUY.search(text):
+            self.call_score = min(100, self.call_score + 22)
+        elif MED_BUY.search(text):
+            self.call_score = min(100, self.call_score + 10)
+        if HIGH_NO.search(text):
+            self.call_score = max(0, self.call_score - 20)
+        elif MED_NO.search(text):
+            self.call_score = max(0, self.call_score - 10)
+        elif LOW_NO.search(text):
+            self.call_score = max(0, self.call_score - 5)
+
     def save_to_crm(self, outcome: str = None):
         transcript = "\n".join(
             f"{'Josh' if m['role'] == 'assistant' else 'Caller'}: {m['content']}"
             for m in self.conversation
             if m["role"] in ("user", "assistant") and not m["content"].startswith("[")
         )
+        city = self._city_from_address()
         upsert_lead(self.session_id, {
             "name": self.prospect_name,
             "email": self.prospect_email,
+            "phone": self.prospect_phone,
             "business": self.prospect_business,
+            "city": self.prospect_city or city or None,
             "industry": self.industry["name"] if self.industry else None,
             "outcome": outcome or self.outcome,
+            "score": self.call_score,
+            "stage": self.stage,
             "conversation": transcript,
         })
 
@@ -413,6 +449,8 @@ def respond(call_sid: str):
 
     print(f"[CALLER] {speech_result} (confidence: {confidence:.2f})")
 
+    session._update_score(speech_result)
+
     if not speech_result:
         twiml = twiml_say(
             "Sorry, I didn't catch that — could you say that again?",
@@ -524,6 +562,23 @@ def dashboard():
 @app.route("/api/leads")
 def api_leads():
     return jsonify(get_all_leads())
+
+
+@app.route("/api/leads/<int:lead_id>")
+def api_lead_detail(lead_id: int):
+    from crm import get_lead_by_id
+    lead = get_lead_by_id(lead_id)
+    if not lead:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify(lead)
+
+
+@app.route("/api/leads/<int:lead_id>/notes", methods=["POST"])
+def api_lead_notes(lead_id: int):
+    from crm import update_lead_notes
+    data = request.get_json(force=True, silent=True) or {}
+    update_lead_notes(lead_id, data.get("notes", ""))
+    return jsonify({"ok": True})
 
 
 @app.route("/api/leads/export")
