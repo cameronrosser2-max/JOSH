@@ -21,3 +21,4 @@ VAPI_ASSISTANT_ID    = _get("VAPI_ASSISTANT_ID")
 VAPI_PHONE_NUMBER_ID = _get("VAPI_PHONE_NUMBER_ID")
 PUBLIC_URL           = _get("PUBLIC_URL") or "http://localhost:5000"
 PORT                 = int(_get("PORT") or 5000)
+DASHBOARD_PASSWORD   = _get("DASHBOARD_PASSWORD")  # optional, locks the dashboard

@@ -33,10 +33,11 @@ import auto_dialer
 import lead_finder as lead_finder_module
 import vapi_agent
 import threading
+import secrets as _secrets
 
 # ── App Setup ─────────────────────────────────────────────────────────────────
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "josh-voice-secret"
+app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET", "josh-voice-secret")
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 init_db()
@@ -47,6 +48,18 @@ call_sessions: dict = {}
 
 # Map call_sid → lead context for outbound calls (declared here for auto_dialer)
 outbound_context: dict = {}
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+from config import DASHBOARD_PASSWORD
+_DASHBOARD_TOKEN = _secrets.token_hex(32)  # regenerated on each server start
+
+
+def _broadcast(event: str, data: dict):
+    """Broadcast a socket event to all connected dashboard clients."""
+    try:
+        socketio.emit(event, data, broadcast=True)
+    except Exception as e:
+        print(f"[SOCKET] Broadcast error: {e}")
 
 
 # ── Josh System Prompt ────────────────────────────────────────────────────────
@@ -423,6 +436,24 @@ def incoming_call():
     opening = session.opening_line()
     print(f"[JOSH] {opening}")
 
+    # Broadcast to dashboard
+    _broadcast("call_started", {
+        "call_sid": call_sid,
+        "business_name": session.prospect_business or from_number,
+        "industry": session.industry["name"] if session.industry else None,
+        "city": session._city_from_address(),
+        "direction": "outbound" if ctx else "inbound",
+        "score": session.call_score,
+        "stage": session.stage,
+    })
+    _broadcast("call_turn", {
+        "call_sid": call_sid,
+        "role": "josh",
+        "text": opening,
+        "score": session.call_score,
+        "stage": session.stage,
+    })
+
     # Try ElevenLabs first, fall back to Polly
     audio_bytes = session.text_to_speech(opening)
     if audio_bytes:
@@ -450,6 +481,16 @@ def respond(call_sid: str):
     print(f"[CALLER] {speech_result} (confidence: {confidence:.2f})")
 
     session._update_score(speech_result)
+
+    # Broadcast prospect speech to dashboard immediately
+    if speech_result:
+        _broadcast("call_turn", {
+            "call_sid": call_sid,
+            "role": "prospect",
+            "text": speech_result,
+            "score": session.call_score,
+            "stage": session.stage,
+        })
 
     if not speech_result:
         twiml = twiml_say(
@@ -483,6 +524,16 @@ def respond(call_sid: str):
 
     session.save_to_crm()
 
+    # Broadcast Josh's reply + updated score/stage to dashboard
+    _broadcast("call_turn", {
+        "call_sid": call_sid,
+        "role": "josh",
+        "text": josh_reply,
+        "score": session.call_score,
+        "stage": session.stage,
+        "outcome": session.outcome,
+    })
+
     audio_bytes = session.text_to_speech(josh_reply)
     if audio_bytes:
         audio_url = _store_audio(call_sid, str(len(session.conversation)), audio_bytes)
@@ -506,6 +557,13 @@ def call_status():
             if session.outcome == "in_progress":
                 session.outcome = "no_answer" if status != "completed" else "in_progress"
             session.save_to_crm()
+            _broadcast("call_ended", {
+                "call_sid": call_sid,
+                "outcome": session.outcome,
+                "score": session.call_score,
+                "business_name": session.prospect_business or "—",
+                "twilio_status": status,
+            })
             del call_sessions[call_sid]
     return "", 204
 
@@ -558,6 +616,76 @@ from flask import jsonify, render_template
 def dashboard():
     return render_template("dashboard.html")
 
+
+# ── Auth endpoints ───────────────────────────────────────────────────────────
+
+@app.route("/api/auth", methods=["POST"])
+def api_auth():
+    if not DASHBOARD_PASSWORD:
+        return jsonify({"ok": True, "token": ""})
+    data = request.get_json(force=True, silent=True) or {}
+    if data.get("password") == DASHBOARD_PASSWORD:
+        return jsonify({"ok": True, "token": _DASHBOARD_TOKEN})
+    return jsonify({"ok": False, "error": "Wrong password"}), 401
+
+
+@app.route("/api/auth/check")
+def api_auth_check():
+    if not DASHBOARD_PASSWORD:
+        return jsonify({"required": False})
+    token = request.headers.get("X-Josh-Token") or request.args.get("token", "")
+    ok = (token == _DASHBOARD_TOKEN)
+    return (jsonify({"required": True, "ok": True}), 200) if ok else (jsonify({"required": True, "ok": False}), 401)
+
+
+# ── Call control endpoints ────────────────────────────────────────────────────
+
+@app.route("/api/calls/<call_id>/end", methods=["POST"])
+def api_end_call_manually(call_id: str):
+    """Manually hang up an active call from the dashboard."""
+    # Try Vapi first
+    try:
+        vapi_agent.end_call(call_id)
+    except Exception as e:
+        print(f"[CALL END] Vapi: {e}")
+
+    # Try Twilio
+    try:
+        if all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN]):
+            from twilio.rest import Client as _Twilio
+            _Twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN).calls(call_id).update(status="completed")
+    except Exception as e:
+        print(f"[CALL END] Twilio: {e}")
+
+    # Clean up local state
+    session = call_sessions.pop(call_id, None)
+    if session and not isinstance(session, dict):
+        session.outcome = "no_answer"
+        session.save_to_crm("no_answer")
+
+    _broadcast("call_ended", {
+        "call_sid": call_id,
+        "outcome": "no_answer",
+        "business_name": session.prospect_business if (session and not isinstance(session, dict)) else "—",
+        "score": session.call_score if (session and not isinstance(session, dict)) else 0,
+    })
+    return jsonify({"ok": True})
+
+
+@app.route("/api/calls/<call_id>/outcome", methods=["POST"])
+def api_set_call_outcome(call_id: str):
+    """Mark a live call's outcome from the dashboard."""
+    data = request.get_json(force=True, silent=True) or {}
+    outcome = data.get("outcome", "interested")
+    session = call_sessions.get(call_id)
+    if session and not isinstance(session, dict):
+        session.outcome = outcome
+        session.save_to_crm(outcome)
+    _broadcast("call_outcome_updated", {"call_sid": call_id, "outcome": outcome})
+    return jsonify({"ok": True})
+
+
+# ── Lead endpoints ────────────────────────────────────────────────────────────
 
 @app.route("/api/leads")
 def api_leads():
@@ -670,6 +798,54 @@ def vapi_webhook():
         print(f"[VAPI] Call ended — {business} | outcome: {outcome} | reason: {ended_reason}")
         if summary:
             print(f"[VAPI] Summary: {summary}")
+        _broadcast("call_ended", {
+            "call_sid": call_id,
+            "outcome": outcome,
+            "score": 0,
+            "business_name": business or "—",
+            "summary": summary,
+        })
+
+    elif event == "speech-update":
+        # Real-time speech as it's being spoken (partial transcript)
+        role = msg.get("role", "")
+        text = msg.get("transcript", "").strip()
+        if text and call_id:
+            _broadcast("call_turn", {
+                "call_sid": call_id,
+                "role": "josh" if role == "assistant" else "prospect",
+                "text": text,
+                "partial": True,
+            })
+
+    elif event == "transcript":
+        # Committed transcript chunk (final for this turn)
+        role = msg.get("role", "")
+        text = msg.get("transcript", "").strip()
+        if text and call_id:
+            _broadcast("call_turn", {
+                "call_sid": call_id,
+                "role": "josh" if role == "assistant" else "prospect",
+                "text": text,
+                "partial": False,
+            })
+
+    elif event == "conversation-update":
+        # Full conversation snapshot — fire on first message to register the call
+        if call_id and call_id not in call_sessions:
+            # Vapi call we haven't seen yet — register it for the dashboard
+            customer = msg.get("call", {}).get("customer", {})
+            biz = customer.get("name", "")
+            call_sessions[call_id] = {"vapi": True, "business_name": biz}
+            _broadcast("call_started", {
+                "call_sid": call_id,
+                "business_name": biz or "Unknown",
+                "industry": None,
+                "city": "",
+                "direction": "outbound",
+                "score": 25,
+                "stage": "opening",
+            })
 
     elif event == "status-update":
         status = msg.get("status", "")
