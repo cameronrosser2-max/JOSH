@@ -123,7 +123,7 @@
   </div>
   <div class="status-badge idle" id="status-badge">
     <div class="pulse"></div>
-    <span id="status-text">Idle</span>
+    <span id="status-text">Ready</span>
   </div>
 </header>
 
@@ -155,9 +155,10 @@
     <div class="control-row">
       <button class="btn btn-warn" id="btn-pause" onclick="pauseDialer()" style="display:none">⏸ Pause</button>
       <button class="btn btn-ghost" onclick="findLeads()" id="btn-find">🔍 Find Leads</button>
+      <button class="btn btn-red" onclick="stopFinder()" id="btn-find-stop" style="display:none">⏹ Stop</button>
       <button class="btn btn-ghost" onclick="loadQueue()">Refresh Queue</button>
     </div>
-    <p style="font-size:12px;color:var(--muted)" id="current-lead-text">Josh is standing by — click Start to begin calling.</p>
+    <p style="font-size:12px;color:var(--muted)" id="current-lead-text">Josh is ready — click Start to begin calling.</p>
   </div>
 
   <!-- Active calls -->
@@ -242,7 +243,7 @@
       <h4>📞 Test Mode</h4>
       <p>Route all calls to your number for testing. Clear this when ready for real calls.</p>
       <label>Your test number</label>
-      <input type="text" id="test-number" value="" placeholder="Leave blank for real calls" />
+      <input type="text" id="test-number" value="+16823985182" placeholder="Leave blank for real calls" />
     </div>
 
     <div class="setting-group">
@@ -259,7 +260,7 @@
 
     <div class="setting-group">
       <h4>🔍 Lead Finder</h4>
-      <p>Auto-find leads using Google Places API. Get a free key at <strong>console.cloud.google.com</strong> → Enable Places API.</p>
+      <p>Finds businesses with <strong>no website</strong> and <strong>3.5★ or below</strong> — perfect targets for Josh.</p>
       <label>Google Places API Key</label>
       <input type="password" id="google-api-key" placeholder="AIza..." />
       <label>Target Cities (one per line)</label>
@@ -269,6 +270,10 @@ Austin TX
 Miami FL
 Los Angeles CA
 Chicago IL</textarea>
+      <label style="margin-top:6px">
+        <input type="checkbox" id="no-website-only" checked style="accent-color:var(--accent);margin-right:6px" />
+        Only businesses with <strong>no website</strong>
+      </label>
       <button class="btn btn-primary" onclick="findLeads()">🔍 Find Leads Now</button>
     </div>
 
@@ -405,7 +410,7 @@ Chicago IL</textarea>
       btn.className = 'big-btn start';
       btn.innerHTML = '<div class="big-btn-icon">📞</div><div class="big-btn-label">Start Josh</div>';
       badge.className = 'status-badge idle';
-      statusText.textContent = 'Idle';
+      statusText.textContent = 'Ready';
       pauseBtn.style.display = 'none';
     }
 
@@ -413,7 +418,7 @@ Chicago IL</textarea>
     const cl = dialer.current_lead;
     document.getElementById('current-lead-text').textContent = cl
       ? `Now calling: ${cl.business_name} (${cl.industry}) — ${cl.phone}`
-      : dialer.running ? 'Dialing next lead...' : 'Josh is standing by — click Start to begin calling.';
+      : dialer.running ? 'Dialing next lead...' : 'Josh is ready — click Start to begin calling.';
 
     // Stats
     const total = Object.values(queue).reduce((a,b)=>a+b,0);
@@ -514,12 +519,14 @@ Chicago IL</textarea>
     if (!apiKey) { showToast('Add your Google Places API key in Settings first', 'err'); document.querySelector('[data-tab="settings"]').click(); return; }
     const citiesRaw = document.getElementById('target-cities')?.value || '';
     const cities = citiesRaw.split('\n').map(c=>c.trim()).filter(Boolean);
+    const maxStars = parseFloat(document.getElementById('max-stars')?.value || 3.5);
+    const noWebsiteOnly = document.getElementById('no-website-only')?.checked !== false;
     document.getElementById('btn-find').disabled = true;
     document.getElementById('btn-find').textContent = '🔍 Finding...';
-    addFeedLine('Starting lead finder...', 'info');
+    addFeedLine(`🎯 Targeting: no website · ${maxStars}★ or below`, 'info');
     const r = await fetch('/api/finder/start', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({google_api_key:apiKey, cities})
+      body: JSON.stringify({google_api_key:apiKey, cities, max_stars:maxStars, require_no_website:noWebsiteOnly})
     });
     const d = await r.json();
     if (d.error) { showToast(d.error, 'err'); document.getElementById('btn-find').disabled = false; document.getElementById('btn-find').textContent = '🔍 Find Leads'; return; }
@@ -527,12 +534,23 @@ Chicago IL</textarea>
     pollFinder();
   }
 
+  async function stopFinder() {
+    await fetch('/api/finder/stop', {method:'POST'});
+    document.getElementById('btn-find-stop').style.display = 'none';
+    document.getElementById('btn-find').disabled = false;
+    document.getElementById('btn-find').textContent = '🔍 Find Leads';
+    showToast('Lead finder stopped', '');
+    loadQueue();
+  }
+
   function pollFinder() {
     fetch('/api/finder/status').then(r=>r.json()).then(d => {
       d.log.forEach(l => addFeedLine(l.msg, 'info'));
       if (d.running) {
+        document.getElementById('btn-find-stop').style.display = '';
         setTimeout(pollFinder, 3000);
       } else {
+        document.getElementById('btn-find-stop').style.display = 'none';
         document.getElementById('btn-find').disabled = false;
         document.getElementById('btn-find').textContent = '🔍 Find Leads';
         if (d.result) showToast(`✅ Found ${d.result.imported} new leads!`, 'ok');
@@ -615,8 +633,6 @@ Chicago IL</textarea>
   }
 
   // ── Init ──
-  // Clear any cached test number from browser autofill
-  document.getElementById('test-number').value = '';
   loadQueue(); loadCRM();
   pollStatus();
   setInterval(pollStatus, 3000);

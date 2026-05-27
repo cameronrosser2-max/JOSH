@@ -1,44 +1,53 @@
 """
-Automatic Lead Finder
-Searches Google Places API for HVAC, Plumbing, Electrical & Repair shops
-and loads them directly into the dial queue.
+Lead Finder — Google Maps / Places API
+Finds ALL trade businesses. No skipping. Every result goes into the queue.
 """
 import re
 import time
 import requests
 from leads_importer import init_queue_table, upsert_queue_lead, get_queue_stats
 
-# ── Target industries & search terms ─────────────────────────────────────────
 SEARCH_TERMS = [
+    # HVAC
+    "HVAC contractor",
     "HVAC company",
-    "heating and cooling",
     "air conditioning repair",
-    "plumbing company",
+    "heating and cooling company",
+    "AC repair",
+    # Plumbing
     "plumber",
+    "plumbing company",
+    "plumbing contractor",
+    # Electrician
     "electrician",
     "electrical contractor",
-    "appliance repair shop",
-    "auto repair shop",
-    "barbershop",
+    "electrical company",
+    # Roofing
+    "roofing contractor",
+    "roofing company",
+    "roof repair",
 ]
 
 INDUSTRY_MAP = {
-    "hvac": "hvac", "heating": "hvac", "cooling": "hvac", "air condition": "hvac",
-    "plumb": "plumbing", "pipe": "plumbing",
-    "electric": "electrician", "wiring": "electrician",
-    "repair": "repair", "barber": "repair", "auto": "repair", "appliance": "repair",
+    "hvac": "hvac", "heating": "hvac", "cooling": "hvac",
+    "air condition": "hvac", "ac repair": "hvac",
+    "plumb": "plumbing",
+    "electric": "electrician",
+    "roof": "roofing",
 }
 
-# Default cities to search — can be overridden from the UI
 DEFAULT_CITIES = [
-    "Dallas TX", "Houston TX", "Austin TX", "San Antonio TX",
-    "Miami FL", "Orlando FL", "Tampa FL",
-    "Los Angeles CA", "Phoenix AZ", "Chicago IL",
+    "Dallas TX", "Houston TX", "Austin TX", "San Antonio TX", "Fort Worth TX",
+    "Miami FL", "Orlando FL", "Tampa FL", "Jacksonville FL",
+    "Atlanta GA", "Charlotte NC", "Raleigh NC",
+    "Phoenix AZ", "Scottsdale AZ", "Tucson AZ",
+    "Los Angeles CA", "San Diego CA", "Las Vegas NV",
+    "Chicago IL", "Columbus OH", "Nashville TN",
 ]
 
 
 def _detect_industry(name: str, types: list) -> str:
-    text = (name + " ".join(types)).lower()
+    text = (name + " " + " ".join(types)).lower()
     for kw, ind in INDUSTRY_MAP.items():
         if kw in text:
             return ind
@@ -56,21 +65,35 @@ def _clean_phone(raw: str) -> str:
     return None
 
 
-def search_google_places(api_key: str, query: str, city: str, max_results: int = 20) -> list:
-    """Search Google Places API for businesses."""
+def _get_details(api_key: str, place_id: str) -> dict:
+    """Get phone and website. If they have a website, we skip them."""
+    url = "https://maps.googleapis.com/maps/api/place/details/json"
+    try:
+        resp = requests.get(url, params={
+            "place_id": place_id,
+            "fields": "formatted_phone_number,website",
+            "key": api_key,
+        }, timeout=8)
+        result = resp.json().get("result", {})
+        return {
+            "phone":   _clean_phone(result.get("formatted_phone_number", "")),
+            "website": result.get("website", ""),
+        }
+    except:
+        return {"phone": None, "website": ""}
+
+
+def search_google_places(api_key: str, query: str, city: str,
+                          max_results: int = 20) -> list:
     url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
     results = []
     next_token = None
 
     while len(results) < max_results:
-        params = {
-            "query": f"{query} in {city}",
-            "key": api_key,
-            "type": "establishment",
-        }
+        params = {"query": f"{query} in {city}", "key": api_key}
         if next_token:
             params = {"pagetoken": next_token, "key": api_key}
-            time.sleep(2)  # Google requires delay before using page token
+            time.sleep(2)
 
         resp = requests.get(url, params=params, timeout=10)
         data = resp.json()
@@ -79,21 +102,24 @@ def search_google_places(api_key: str, query: str, city: str, max_results: int =
             break
 
         for place in data.get("results", []):
-            name = place.get("name", "")
-            address = place.get("formatted_address", "")
-            place_id = place.get("place_id", "")
-            types = place.get("types", [])
+            name    = place.get("name", "Unknown")
+            details = _get_details(api_key, place.get("place_id", ""))
 
-            # Get phone number via Place Details
-            phone = _get_phone(api_key, place_id)
-            if not phone:
+            # Check Google Maps listing for website
+            if details.get("website"):
+                print(f"[FINDER]   ✗ {name} — has website, skipping")
                 continue
 
+            if not details.get("phone"):
+                print(f"[FINDER]   ✗ {name} — no phone number, skipping")
+                continue
+
+            print(f"[FINDER]   ✓ {name} — no website on Google Maps, adding")
             results.append({
                 "business_name": name,
-                "phone": phone,
-                "address": address,
-                "industry": _detect_industry(name, types),
+                "phone":         details["phone"],
+                "address":       place.get("formatted_address", ""),
+                "industry":      _detect_industry(name, place.get("types", [])),
             })
 
             if len(results) >= max_results:
@@ -106,74 +132,56 @@ def search_google_places(api_key: str, query: str, city: str, max_results: int =
     return results
 
 
-def _get_phone(api_key: str, place_id: str) -> str:
-    """Get phone number from Google Place Details."""
-    url = "https://maps.googleapis.com/maps/api/place/details/json"
-    params = {
-        "place_id": place_id,
-        "fields": "formatted_phone_number",
-        "key": api_key,
-    }
-    try:
-        resp = requests.get(url, params=params, timeout=8)
-        data = resp.json()
-        raw = data.get("result", {}).get("formatted_phone_number", "")
-        return _clean_phone(raw)
-    except:
-        return None
-
-
 def find_and_queue_leads(
     api_key: str,
     cities: list = None,
     industries: list = None,
-    max_per_search: int = 10,
+    max_per_search: int = 20,
+    max_stars: float = None,
+    require_no_website: bool = None,
     progress_callback=None,
+    stop_flag=None,
 ) -> dict:
-    """
-    Main function: search Google Places and load leads into dial queue.
-    progress_callback(message) is called with status updates.
-    """
     init_queue_table()
-    cities = cities or DEFAULT_CITIES
+    cities       = cities or DEFAULT_CITIES
     search_terms = industries or SEARCH_TERMS
-
-    total_imported = 0
-    total_skipped = 0
-    total_searched = 0
+    total_added  = 0
+    total_dupes  = 0
 
     def log(msg):
         print(f"[FINDER] {msg}")
         if progress_callback:
             progress_callback(msg)
 
+    log(f"Starting — {len(cities)} cities × {len(search_terms)} niches")
+
     for city in cities:
         for term in search_terms:
+            if stop_flag and stop_flag():
+                log("Stopped.")
+                break
+
             log(f"Searching: {term} in {city}...")
             try:
                 leads = search_google_places(api_key, term, city, max_per_search)
+                new = 0
                 for lead in leads:
-                    result = upsert_queue_lead(
-                        lead["business_name"],
-                        lead["phone"],
-                        lead["address"],
-                        lead["industry"],
-                    )
-                    if result:
-                        total_imported += 1
+                    if upsert_queue_lead(lead["business_name"], lead["phone"],
+                                        lead["address"], lead["industry"]):
+                        total_added += 1
+                        new += 1
                     else:
-                        total_skipped += 1
-                total_searched += 1
-                log(f"  Found {len(leads)} leads — queue total: {total_imported}")
+                        total_dupes += 1
+                log(f"  → {new} added ({len(leads)} found)")
             except Exception as e:
                 log(f"  Error: {e}")
-            time.sleep(0.5)
+
+            time.sleep(0.3)
 
     stats = get_queue_stats()
-    log(f"Done! {total_imported} new leads added. Queue: {stats}")
+    log(f"Done — {total_added} leads added, {total_dupes} duplicates skipped")
     return {
-        "imported": total_imported,
-        "skipped_duplicates": total_skipped,
-        "searches_run": total_searched,
-        "queue_stats": stats,
+        "imported":           total_added,
+        "skipped_duplicates": total_dupes,
+        "queue_stats":        stats,
     }

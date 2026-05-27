@@ -37,7 +37,7 @@ import threading
 # ── App Setup ─────────────────────────────────────────────────────────────────
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "josh-voice-secret"
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 init_db()
 init_queue_table()
@@ -798,6 +798,8 @@ def api_finder_start():
     api_key = data.get("google_api_key", "").strip()
     cities = data.get("cities") or lead_finder_module.DEFAULT_CITIES
     industries = data.get("industries") or None
+    max_stars = data.get("max_stars", 3.5)
+    require_no_website = data.get("require_no_website", True)
 
     if not api_key:
         return jsonify({"error": "Google Places API key required"}), 400
@@ -809,12 +811,17 @@ def api_finder_start():
     def run():
         def log(msg):
             _finder_status["log"].append({"time": __import__("time").strftime("%H:%M:%S"), "msg": msg})
+        def should_stop():
+            return not _finder_status["running"]
         try:
             result = lead_finder_module.find_and_queue_leads(
                 api_key=api_key,
                 cities=cities,
                 industries=industries,
+                max_stars=max_stars,
+                require_no_website=require_no_website,
                 progress_callback=log,
+                stop_flag=should_stop,
             )
             _finder_status["result"] = result
         except Exception as e:
@@ -824,6 +831,12 @@ def api_finder_start():
 
     threading.Thread(target=run, daemon=True).start()
     return jsonify({"status": "started"})
+
+
+@app.route("/api/finder/stop", methods=["POST"])
+def api_finder_stop():
+    _finder_status["running"] = False
+    return jsonify({"status": "stopped"})
 
 
 @app.route("/api/finder/status")
@@ -844,6 +857,4 @@ if __name__ == "__main__":
 ║  Public URL: {PUBLIC_URL}
 ╚══════════════════════════════════════════════════╝
 """)
-    import eventlet
-    import eventlet.wsgi
-    eventlet.wsgi.server(eventlet.listen(("0.0.0.0", PORT)), app)
+    socketio.run(app, host="0.0.0.0", port=PORT, debug=False)
