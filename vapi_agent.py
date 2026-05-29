@@ -99,11 +99,22 @@ def make_call(to: str, business_name: str = None, industry: str = None,
             ],
         }
 
+    voicemail_msg = (
+        f"Hey{', this is Josh' if not business_name else ''} — "
+        f"{'I was calling for ' + business_name + ' — ' if business_name else ''}"
+        f"I help {'trade' if not industry else industry} businesses get more booked jobs from Google. "
+        f"If your phone isn't ringing as much as you want, give me a call back or I'll try you again. "
+        f"Talk soon."
+    )
+
     payload = {
         "assistantId": VAPI_ASSISTANT_ID,
         "phoneNumberId": VAPI_PHONE_NUMBER_ID,
         "customer": {"number": to},
         "assistantOverrides": overrides,
+        "phoneCallProviderDetails": {
+            "voicemailMessage": voicemail_msg,
+        },
     }
     if business_name:
         payload["customer"]["name"] = business_name

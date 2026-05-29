@@ -207,6 +207,16 @@ def import_csv(filepath: str) -> dict:
 
 
 # ── Google Sheets Sync ────────────────────────────────────────────────────────
+def _extract_sheet_id(sheet_id_or_url: str) -> str:
+    """Accept either a raw sheet ID or a full Google Sheets URL and return just the ID."""
+    import re as _re
+    # Match /d/<ID>/ pattern from any Google Sheets URL
+    m = _re.search(r"/spreadsheets/d/([a-zA-Z0-9_-]+)", sheet_id_or_url)
+    if m:
+        return m.group(1)
+    return sheet_id_or_url.strip()
+
+
 def sync_google_sheet(sheet_id: str, credentials_path: str = "google_credentials.json",
                        tab_name: str = None) -> dict:
     """
@@ -222,6 +232,7 @@ def sync_google_sheet(sheet_id: str, credentials_path: str = "google_credentials
     if not Path(credentials_path).exists():
         return {"error": f"Google credentials file not found: {credentials_path}"}
 
+    sheet_id = _extract_sheet_id(sheet_id)
     scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
     creds = Credentials.from_service_account_file(credentials_path, scopes=scopes)
     service = build("sheets", "v4", credentials=creds)
