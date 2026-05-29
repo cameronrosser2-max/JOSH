@@ -1,6 +1,6 @@
 """
 Lead Finder — Google Maps / Places API
-Finds ALL trade businesses. No skipping. Every result goes into the queue.
+Finds trade businesses with no website across all supported industries.
 """
 import re
 import time
@@ -9,31 +9,54 @@ from leads_importer import init_queue_table, upsert_queue_lead, get_queue_stats
 
 SEARCH_TERMS = [
     # HVAC
-    "HVAC contractor",
-    "HVAC company",
-    "air conditioning repair",
-    "heating and cooling company",
-    "AC repair",
+    "HVAC contractor", "HVAC company", "air conditioning repair", "heating and cooling", "AC repair",
     # Plumbing
-    "plumber",
-    "plumbing company",
-    "plumbing contractor",
-    # Electrician
-    "electrician",
-    "electrical contractor",
-    "electrical company",
+    "plumber", "plumbing company", "plumbing contractor",
+    # Electrical
+    "electrician", "electrical contractor", "electrical company",
     # Roofing
-    "roofing contractor",
-    "roofing company",
-    "roof repair",
+    "roofing contractor", "roofing company", "roof repair",
+    # Landscaping
+    "landscaping company", "lawn care service", "lawn mowing service",
+    # Painting
+    "painting contractor", "house painter", "interior painter",
+    # Pest Control
+    "pest control company", "exterminator", "termite treatment",
+    # Pressure Washing
+    "pressure washing service", "power washing company",
+    # Cleaning
+    "house cleaning service", "maid service", "janitorial service",
+    # Concrete / Masonry
+    "concrete contractor", "driveway paving", "masonry contractor",
+    # Fencing
+    "fence installation company", "fencing contractor",
+    # Garage Door
+    "garage door repair", "garage door company",
+    # Pool
+    "pool service company", "pool cleaning service",
+    # Tree Service
+    "tree removal service", "tree trimming company", "arborist",
+    # General Repair
+    "auto repair shop", "appliance repair", "handyman service",
 ]
 
 INDUSTRY_MAP = {
     "hvac": "hvac", "heating": "hvac", "cooling": "hvac",
-    "air condition": "hvac", "ac repair": "hvac",
+    "air condition": "hvac", "ac repair": "hvac", "furnace": "hvac",
     "plumb": "plumbing",
     "electric": "electrician",
     "roof": "roofing",
+    "landscap": "landscaping", "lawn": "landscaping", "mowing": "landscaping",
+    "paint": "painting",
+    "pest": "pest_control", "exterminator": "pest_control", "termite": "pest_control",
+    "pressure wash": "pressure_washing", "power wash": "pressure_washing",
+    "cleaning service": "cleaning", "maid": "cleaning", "janitorial": "cleaning",
+    "concrete": "concrete", "paving": "concrete", "masonry": "concrete", "driveway": "concrete",
+    "fenc": "fencing",
+    "garage door": "garage_door",
+    "pool": "pool",
+    "tree": "tree_service", "arborist": "tree_service",
+    "auto repair": "repair", "appliance": "repair", "handyman": "repair",
 }
 
 DEFAULT_CITIES = [
@@ -43,6 +66,7 @@ DEFAULT_CITIES = [
     "Phoenix AZ", "Scottsdale AZ", "Tucson AZ",
     "Los Angeles CA", "San Diego CA", "Las Vegas NV",
     "Chicago IL", "Columbus OH", "Nashville TN",
+    "Denver CO", "Seattle WA", "Portland OR",
 ]
 
 
@@ -66,7 +90,6 @@ def _clean_phone(raw: str) -> str:
 
 
 def _get_details(api_key: str, place_id: str) -> dict:
-    """Get phone and website. If they have a website, we skip them."""
     url = "https://maps.googleapis.com/maps/api/place/details/json"
     try:
         resp = requests.get(url, params={
@@ -79,7 +102,7 @@ def _get_details(api_key: str, place_id: str) -> dict:
             "phone":   _clean_phone(result.get("formatted_phone_number", "")),
             "website": result.get("website", ""),
         }
-    except:
+    except Exception:
         return {"phone": None, "website": ""}
 
 
@@ -105,16 +128,15 @@ def search_google_places(api_key: str, query: str, city: str,
             name    = place.get("name", "Unknown")
             details = _get_details(api_key, place.get("place_id", ""))
 
-            # Check Google Maps listing for website
             if details.get("website"):
                 print(f"[FINDER]   ✗ {name} — has website, skipping")
                 continue
 
             if not details.get("phone"):
-                print(f"[FINDER]   ✗ {name} — no phone number, skipping")
+                print(f"[FINDER]   ✗ {name} — no phone, skipping")
                 continue
 
-            print(f"[FINDER]   ✓ {name} — no website on Google Maps, adding")
+            print(f"[FINDER]   ✓ {name} — no website, adding")
             results.append({
                 "business_name": name,
                 "phone":         details["phone"],

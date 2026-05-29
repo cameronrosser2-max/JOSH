@@ -3,191 +3,339 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Josh — AI Sales Machine</title>
+  <title>Josh — Live Control</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --bg:#080a0e;--surface:#0f1218;--surface2:#161b24;--border:#1e2535;
       --accent:#4f8ef7;--green:#3ddc97;--red:#e05c5c;--warn:#f4a642;
-      --text:#e8ecf4;--muted:#4a5570;--purple:#a78bfa;
+      --text:#e8ecf4;--muted:#4a5570;--purple:#a78bfa;--pink:#f472b6;
     }
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    html,body{height:100%;overflow:hidden}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
 
-    /* Header */
-    header{display:flex;align-items:center;gap:14px;padding:16px 28px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
-    .logo{width:40px;height:40px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#fff;flex-shrink:0}
-    header h1{font-size:18px;font-weight:700}
-    header p{font-size:11px;color:var(--muted);margin-top:2px}
-    .status-badge{margin-left:auto;display:flex;align-items:center;gap:6px;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;transition:all .3s}
-    .status-badge.idle{background:rgba(90,100,128,.15);color:var(--muted);border:1px solid var(--border)}
-    .status-badge.running{background:rgba(61,220,151,.12);color:var(--green);border:1px solid rgba(61,220,151,.3)}
-    .status-badge.paused{background:rgba(244,166,66,.12);color:var(--warn);border:1px solid rgba(244,166,66,.3)}
-    .pulse{width:7px;height:7px;border-radius:50%;background:currentColor;animation:blink 1.2s ease-in-out infinite}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+    /* ── Header ── */
+    header{display:flex;align-items:center;gap:12px;padding:11px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:50}
+    .logo{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;flex-shrink:0}
+    header h1{font-size:16px;font-weight:700}
+    header p{font-size:10px;color:var(--muted);margin-top:1px}
+    .hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+    .live-badge{display:flex;align-items:center;gap:5px;background:rgba(224,92,92,.12);color:var(--red);border:1px solid rgba(224,92,92,.25);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700}
+    .live-badge.has-calls{animation:live-pulse 1.5s ease-in-out infinite}
+    @keyframes live-pulse{0%,100%{border-color:rgba(224,92,92,.25)}50%{border-color:rgba(224,92,92,.7)}}
+    .live-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+    .btn-sound{background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 8px;transition:all .2s}
+    .btn-sound.on{color:var(--warn);border-color:rgba(244,166,66,.3)}
 
-    /* Tabs */
-    .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px}
-    .tab{padding:11px 20px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+    /* ── Tabs ── */
+    .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .tab{padding:10px 16px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;flex-shrink:0;user-select:none}
     .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
     .tab:hover:not(.active){color:var(--text)}
-    .panel{display:none}.panel.active{display:block}
-    .page{max-width:1280px;margin:0 auto;padding:28px}
+    .tab-badge{background:rgba(224,92,92,.2);color:var(--red);border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;font-weight:700}
+    .tab-badge.blue{background:rgba(79,142,247,.2);color:var(--accent)}
+    .tab-badge.green{background:rgba(61,220,151,.15);color:var(--green)}
 
-    /* BIG START BUTTON */
-    .command-center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:48px 28px;text-align:center}
-    .big-btn{width:200px;height:200px;border-radius:50%;border:none;font-size:22px;font-weight:800;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;letter-spacing:.5px;box-shadow:0 0 40px rgba(61,220,151,.2)}
-    .big-btn.start{background:var(--green);color:#080a0e}
-    .big-btn.start:hover{transform:scale(1.05);box-shadow:0 0 60px rgba(61,220,151,.4)}
-    .big-btn.stop{background:var(--red);color:#fff}
-    .big-btn.stop:hover{transform:scale(1.05);box-shadow:0 0 60px rgba(224,92,92,.4)}
-    .big-btn.paused{background:var(--warn);color:#080a0e}
-    .big-btn-icon{font-size:48px;line-height:1}
-    .big-btn-label{font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+    /* ── Panels ── */
+    .panel{display:none;flex:1;overflow:hidden;flex-direction:column}
+    .panel.active{display:flex}
+    .scroll-area{flex:1;overflow-y:auto;padding:20px}
+    .scroll-area::-webkit-scrollbar{width:4px}
+    .scroll-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
-    .control-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
+    /* ── Buttons ── */
+    .btn{padding:8px 15px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s;font-family:inherit;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+    .btn:active{transform:scale(.97)}.btn:disabled{opacity:.35;cursor:not-allowed}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-green{background:var(--green);color:#080a0e}
+    .btn-red{background:var(--red);color:#fff}
+    .btn-warn{background:var(--warn);color:#080a0e}
+    .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+    .btn-sm{padding:5px 11px;font-size:12px;border-radius:8px}
 
-    /* Stats bar */
-    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:24px}
-    .stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
-    .stat .val{font-size:28px;font-weight:800;line-height:1}
-    .stat .lbl{font-size:10px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.6px}
+    /* ── Stats row ── */
+    .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+    .stat{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px 16px;flex:1;min-width:90px}
+    .stat .val{font-size:24px;font-weight:800;line-height:1}
+    .stat .lbl{font-size:9px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.6px}
     .stat.blue .val{color:var(--accent)}.stat.green .val{color:var(--green)}
     .stat.warn .val{color:var(--warn)}.stat.red .val{color:var(--red)}.stat.purple .val{color:var(--purple)}
 
-    /* Buttons */
-    .btn{padding:9px 18px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s;font-family:inherit;white-space:nowrap}
-    .btn:active{transform:scale(.97)}.btn:disabled{opacity:.35;cursor:not-allowed}
-    .btn-primary{background:var(--accent);color:#fff}.btn-green{background:var(--green);color:#080a0e}
-    .btn-red{background:var(--red);color:#fff}.btn-warn{background:var(--warn);color:#080a0e}
-    .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
-    .btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+    /* ── Tags ── */
+    .tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+    .t-blue{background:rgba(79,142,247,.15);color:var(--accent)}.t-green{background:rgba(61,220,151,.15);color:var(--green)}
+    .t-warn{background:rgba(244,166,66,.15);color:var(--warn)}.t-red{background:rgba(224,92,92,.12);color:var(--red)}
+    .t-muted{background:rgba(90,100,128,.15);color:var(--muted)}.t-purple{background:rgba(167,139,250,.15);color:var(--purple)}
+    .t-pink{background:rgba(244,114,182,.15);color:var(--pink)}
+
+    /* ── LIVE MONITOR ── */
+    .live-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--muted);text-align:center;padding:40px}
+    .live-empty .icon{font-size:56px;line-height:1;opacity:.4}
+    .live-empty h2{font-size:18px;font-weight:700;color:var(--text);opacity:.6}
+    .live-empty p{font-size:13px;max-width:280px;line-height:1.6}
+
+    .live-calls-grid{display:flex;flex-direction:column;gap:16px}
+    @media(min-width:900px){.live-calls-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}}
+
+    .call-card{background:var(--surface);border:1px solid rgba(61,220,151,.2);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .3s}
+    .call-card.ringing{border-color:rgba(79,142,247,.4)}
+    .call-card.hot{border-color:rgba(61,220,151,.5);box-shadow:0 0 20px rgba(61,220,151,.07)}
+    .call-card.dead{border-color:rgba(90,100,128,.2);opacity:.7}
+
+    .call-card-top{padding:13px 16px;border-bottom:1px solid var(--border)}
+    .call-card-biz{font-size:14px;font-weight:700}
+    .call-card-meta{display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap}
+    .call-card-duration{font-size:11px;color:var(--muted);font-family:monospace}
+    .live-indicator{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase}
+    .live-indicator .dot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink 1s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+    /* Score bar inside call card */
+    .score-row{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.15)}
+    .score-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;min-width:38px}
+    .score-track{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+    .score-fill{height:100%;border-radius:3px;transition:width .5s,background .5s}
+    .score-num{font-size:12px;font-weight:800;min-width:28px;text-align:right}
+
+    /* Conversation inside call card */
+    .call-transcript{height:200px;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:rgba(0,0,0,.2)}
+    .call-transcript::-webkit-scrollbar{width:3px}
+    .call-transcript::-webkit-scrollbar-thumb{background:var(--border)}
+    .ct-line{display:flex;gap:8px;align-items:flex-start}
+    .ct-who{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;min-width:50px;padding-top:3px;flex-shrink:0}
+    .ct-line.josh .ct-who{color:var(--accent)}
+    .ct-line.prospect .ct-who{color:var(--green)}
+    .ct-text{font-size:12px;line-height:1.5;color:var(--text);background:var(--surface2);padding:6px 10px;border-radius:9px;flex:1}
+    .ct-line.josh .ct-text{border-top-left-radius:2px}
+    .ct-line.prospect .ct-text{border-top-right-radius:2px}
+    .ct-line.partial .ct-text{opacity:.6;font-style:italic}
+    .ct-line.new-turn{animation:fade-in .3s ease}
+    @keyframes fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+    /* Call action buttons */
+    .call-actions{display:flex;gap:8px;padding:12px 14px;flex-wrap:wrap}
+
+    /* Typing animation inside card */
+    .typing-dots{display:flex;gap:3px;align-items:center;padding:6px 10px}
+    .typing-dot{width:5px;height:5px;background:var(--muted);border-radius:50%;animation:tdot .8s ease-in-out infinite}
+    .typing-dot:nth-child(2){animation-delay:.13s}
+    .typing-dot:nth-child(3){animation-delay:.26s}
+    @keyframes tdot{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+
+    /* ── COMMAND PANEL ── */
+    .cmd-grid{display:grid;grid-template-columns:1fr;gap:18px}
+    @media(min-width:900px){.cmd-grid{grid-template-columns:1fr 280px}}
+
+    .command-center{display:flex;flex-direction:column;align-items:center;gap:18px;padding:30px 20px;text-align:center}
+    .big-btn{width:160px;height:160px;border-radius:50%;border:none;font-size:18px;font-weight:800;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+    .big-btn.start{background:var(--green);color:#080a0e;box-shadow:0 0 40px rgba(61,220,151,.2)}
+    .big-btn.start:hover{transform:scale(1.06);box-shadow:0 0 60px rgba(61,220,151,.4)}
+    .big-btn.stop{background:var(--red);color:#fff;box-shadow:0 0 40px rgba(224,92,92,.2)}
+    .big-btn.stop:hover{transform:scale(1.06)}
+    .big-btn.paused{background:var(--warn);color:#080a0e}
+    .big-btn-icon{font-size:40px;line-height:1}
+    .big-btn-lbl{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+    .control-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 
     /* Cards */
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px}
-    .card-header{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap}
-    .card-header h3{font-size:14px;font-weight:700;margin-right:auto}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:18px}
+    .card-hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+    .card-hdr h3{font-size:13px;font-weight:700;margin-right:auto}
 
     /* Live feed */
-    .live-feed{height:220px;overflow-y:auto;padding:12px 16px;font-family:monospace;font-size:12px;display:flex;flex-direction:column;gap:4px;background:var(--bg)}
+    .live-feed{height:180px;overflow-y:auto;padding:8px 12px;font-family:monospace;font-size:12px;display:flex;flex-direction:column;gap:3px;background:var(--bg)}
     .live-feed::-webkit-scrollbar{width:3px}.live-feed::-webkit-scrollbar-thumb{background:var(--border)}
-    .feed-line{display:flex;gap:10px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.03)}
-    .feed-time{color:var(--muted);flex-shrink:0;width:50px}
-    .feed-msg{color:var(--text)}
-    .feed-msg.success{color:var(--green)}.feed-msg.error{color:var(--red)}.feed-msg.info{color:var(--accent)}
+    .feed-line{display:flex;gap:8px;padding:2px 0}
+    .feed-time{color:var(--muted);flex-shrink:0;width:44px}
+    .feed-msg{color:var(--text)}.feed-msg.ok{color:var(--green)}.feed-msg.err{color:var(--red)}.feed-msg.info{color:var(--accent)}
 
-    /* Active call card */
-    .active-calls{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-bottom:20px;min-height:50px}
-    .call-card{background:var(--surface);border:1px solid rgba(61,220,151,.3);border-radius:12px;padding:14px;position:relative}
-    .call-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--green);border-radius:12px 12px 0 0}
-    .call-card .biz{font-size:13px;font-weight:600}.call-card .meta{font-size:11px;color:var(--muted);margin-top:3px}
-    .no-calls{font-size:13px;color:var(--muted)}
+    /* Industry bars */
+    .ind-bar-item{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+    .ind-bar-label{font-size:11px;color:var(--muted);min-width:90px;text-transform:capitalize}
+    .ind-bar-track{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+    .ind-bar-fill{height:100%;border-radius:3px;transition:width .6s}
+    .ind-bar-count{font-size:11px;color:var(--muted);min-width:20px;text-align:right}
 
     /* Table */
     .table-wrap{overflow-x:auto}
     table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px}
-    th{text-align:left;padding:10px 16px;color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--surface)}
-    td{padding:10px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
-    tr:last-child td{border-bottom:none}tr:hover td{background:var(--surface2)}
-    .no-data{text-align:center;color:var(--muted);padding:36px;font-size:13px}
+    th{text-align:left;padding:8px 13px;color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0}
+    td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.015);cursor:pointer}
+    .no-data{text-align:center;color:var(--muted);padding:28px;font-size:13px}
 
-    /* Tags */
-    .tag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
-    .t-blue{background:rgba(79,142,247,.15);color:var(--accent)}.t-green{background:rgba(61,220,151,.15);color:var(--green)}
-    .t-warn{background:rgba(244,166,66,.15);color:var(--warn)}.t-red{background:rgba(224,92,92,.12);color:var(--red)}
-    .t-muted{background:rgba(90,100,128,.15);color:var(--muted)}.t-purple{background:rgba(167,139,250,.15);color:var(--purple)}
+    /* Score bar (table) */
+    .sbar{display:flex;align-items:center;gap:5px;min-width:80px}
+    .sbar-track{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+    .sbar-fill{height:100%;border-radius:2px;transition:width .4s}
+    .sbar-num{font-size:11px;font-weight:700;min-width:22px;text-align:right}
 
     /* Settings */
-    .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:20px}
+    .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     @media(max-width:700px){.settings-grid{grid-template-columns:1fr}}
-    .setting-group{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px}
-    .setting-group h4{font-size:13px;font-weight:700}.setting-group p{font-size:12px;color:var(--muted);line-height:1.5}
-    label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
-    input[type=text],input[type=password],textarea,select{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 12px;outline:none;font-family:inherit;width:100%;transition:border-color .2s}
+    .sg{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:15px;display:flex;flex-direction:column;gap:9px}
+    .sg h4{font-size:13px;font-weight:700}.sg p{font-size:12px;color:var(--muted);line-height:1.5}
+    label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px}
+    input[type=text],input[type=password],textarea,select{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:7px 11px;outline:none;font-family:inherit;width:100%;transition:border-color .2s}
     input:focus,textarea:focus,select:focus{border-color:var(--accent)}
     input::placeholder,textarea::placeholder{color:var(--muted)}
-    textarea{resize:vertical;min-height:80px}
+    textarea{resize:vertical;min-height:75px}
+    .search-wrap{position:relative;flex:1;max-width:250px}
+    .search-wrap input{padding-left:28px;width:100%}
+    .search-wrap::before{content:'🔍';position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none}
 
     /* Toast */
-    .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-size:13px;box-shadow:0 8px 32px rgba(0,0,0,.5);transform:translateY(80px);opacity:0;transition:all .3s;z-index:999;max-width:340px}
+    .toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px 16px;font-size:13px;box-shadow:0 8px 32px rgba(0,0,0,.5);transform:translateY(70px);opacity:0;transition:all .3s;z-index:999;max-width:320px}
     .toast.show{transform:translateY(0);opacity:1}
     .toast.ok{border-color:var(--green)}.toast.err{border-color:var(--red)}
+
+    /* Conversation modal */
+    .modal-back{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+    .modal-back.open{display:flex}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:15px;width:100%;max-width:660px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+    .modal-hdr{display:flex;align-items:flex-start;gap:12px;padding:15px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+    .modal-hdr h2{font-size:15px;font-weight:700;margin-right:auto}
+    .modal-meta{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.6}
+    .modal-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;padding:2px;flex-shrink:0}
+    .modal-x:hover{color:var(--text)}
+    .modal-body{flex:1;overflow-y:auto;padding:16px}
+    .modal-body::-webkit-scrollbar{width:4px}
+    .modal-body::-webkit-scrollbar-thumb{background:var(--border)}
+    .modal-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
+    .t-line{display:flex;gap:9px;align-items:flex-start;margin-bottom:9px}
+    .t-who{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;min-width:58px;padding-top:2px;flex-shrink:0}
+    .t-line.josh .t-who{color:var(--accent)}.t-line.prospect .t-who{color:var(--green)}
+    .t-txt{font-size:13px;line-height:1.55;background:var(--surface2);padding:8px 12px;border-radius:10px;flex:1}
+    .t-line.josh .t-txt{border-top-left-radius:2px}.t-line.prospect .t-txt{border-top-right-radius:2px}
+    #modal-notes{min-height:65px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 11px;font-family:inherit;width:100%;resize:vertical}
+    #modal-notes:focus{border-color:var(--accent);outline:none}
+
+    /* Auth overlay */
+    .auth-overlay{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center}
+    .auth-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:380px;width:90%;display:flex;flex-direction:column;gap:16px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+    .auth-box h2{font-size:18px;font-weight:700}
+    .auth-box p{font-size:13px;color:var(--muted)}
+    .auth-box input{font-size:14px;padding:10px 13px}
+    .auth-error{font-size:12px;color:var(--red);display:none}
+
+    /* Mobile adjustments */
+    @media(max-width:600px){
+      .scroll-area{padding:14px}
+      .stats{gap:7px}
+      .stat{min-width:70px;padding:10px 12px}
+      .stat .val{font-size:20px}
+      .call-transcript{height:160px}
+      .settings-grid{grid-template-columns:1fr}
+    }
   </style>
 </head>
 <body>
 
+<!-- Auth overlay (shown if DASHBOARD_PASSWORD is set) -->
+<div class="auth-overlay" id="auth-overlay" style="display:none">
+  <div class="auth-box">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#fff;flex-shrink:0">J</div>
+      <div>
+        <h2>Josh — Sales Control</h2>
+        <p style="margin:0">Enter your dashboard password</p>
+      </div>
+    </div>
+    <input type="password" id="auth-input" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" autofocus />
+    <div class="auth-error" id="auth-error">Wrong password — try again</div>
+    <button class="btn btn-primary" onclick="doLogin()" style="width:100%;justify-content:center;padding:11px">Unlock Dashboard</button>
+  </div>
+</div>
+
 <header>
   <div class="logo">J</div>
   <div>
-    <h1>Josh — AI Sales Machine</h1>
-    <p>Finds leads · Cold calls · Closes deals · You do nothing</p>
+    <h1>Josh — Sales Control</h1>
+    <p>Live monitoring · Dialer · CRM</p>
   </div>
-  <div class="status-badge idle" id="status-badge">
-    <div class="pulse"></div>
-    <span id="status-text">Ready</span>
+  <div class="hdr-right">
+    <div class="live-badge" id="live-badge">
+      <div class="live-dot"></div>
+      <span id="live-count">0 LIVE</span>
+    </div>
+    <button class="btn-sound" id="btn-sound" onclick="toggleSound()" title="Sound alerts">🔕</button>
   </div>
 </header>
 
 <div class="tabs">
+  <div class="tab" data-tab="live">📡 Live <span class="tab-badge" id="badge-live">0</span></div>
   <div class="tab active" data-tab="command">🚀 Command</div>
-  <div class="tab" data-tab="queue">📋 Queue <span id="tab-queue-count" style="background:rgba(79,142,247,.2);color:var(--accent);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">—</span></div>
-  <div class="tab" data-tab="crm">💼 CRM <span id="tab-crm-count" style="background:rgba(61,220,151,.15);color:var(--green);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">—</span></div>
+  <div class="tab" data-tab="queue">📋 Queue <span class="tab-badge blue" id="badge-queue">—</span></div>
+  <div class="tab" data-tab="crm">💼 CRM <span class="tab-badge green" id="badge-crm">—</span></div>
   <div class="tab" data-tab="settings">⚙️ Settings</div>
 </div>
 
-<!-- ══════════════ COMMAND TAB ══════════════ -->
-<div class="panel active" id="tab-command">
-<div class="page">
+<!-- ══ LIVE MONITOR ══════════════════════════════════════════════════════════ -->
+<div class="panel" id="tab-live">
+  <div class="scroll-area" id="live-scroll">
+    <div class="live-empty" id="live-empty">
+      <div class="icon">📡</div>
+      <h2>Waiting for calls</h2>
+      <p>When Josh makes a call, the live conversation will appear here. Start the dialer in the Command tab.</p>
+    </div>
+    <div class="live-calls-grid" id="live-calls-grid" style="display:none"></div>
+  </div>
+</div>
 
+<!-- ══ COMMAND ════════════════════════════════════════════════════════════════ -->
+<div class="panel active" id="tab-command">
+<div class="scroll-area">
   <div class="stats">
-    <div class="stat blue"><div class="val" id="s-queue">—</div><div class="lbl">In Queue</div></div>
-    <div class="stat red"><div class="val" id="s-active">—</div><div class="lbl">Active Calls</div></div>
-    <div class="stat green"><div class="val" id="s-calls">—</div><div class="lbl">Calls Made</div></div>
+    <div class="stat blue"><div class="val" id="s-queue">—</div><div class="lbl">Queue</div></div>
+    <div class="stat red"><div class="val" id="s-active">—</div><div class="lbl">Live</div></div>
+    <div class="stat green"><div class="val" id="s-calls">—</div><div class="lbl">Made</div></div>
     <div class="stat warn"><div class="val" id="s-interested">—</div><div class="lbl">Interested</div></div>
     <div class="stat green"><div class="val" id="s-closed">—</div><div class="lbl">Closed</div></div>
+    <div class="stat purple"><div class="val" id="s-rate">—</div><div class="lbl">Close %</div></div>
   </div>
 
-  <!-- Big button -->
-  <div class="command-center">
-    <button class="big-btn start" id="big-btn" onclick="toggleDialer()">
-      <div class="big-btn-icon">📞</div>
-      <div class="big-btn-label">Start Josh</div>
-    </button>
-    <div class="control-row">
-      <button class="btn btn-warn" id="btn-pause" onclick="pauseDialer()" style="display:none">⏸ Pause</button>
-      <button class="btn btn-ghost" onclick="findLeads()" id="btn-find">🔍 Find Leads</button>
-      <button class="btn btn-red" onclick="stopFinder()" id="btn-find-stop" style="display:none">⏹ Stop</button>
-      <button class="btn btn-ghost" onclick="loadQueue()">Refresh Queue</button>
+  <div class="cmd-grid">
+    <div>
+      <div class="command-center">
+        <button class="big-btn start" id="big-btn" onclick="toggleDialer()">
+          <div class="big-btn-icon">📞</div>
+          <div class="big-btn-lbl">Start Josh</div>
+        </button>
+        <div class="control-row">
+          <button class="btn btn-warn btn-sm" id="btn-pause" onclick="pauseDialer()" style="display:none">⏸ Pause</button>
+          <button class="btn btn-ghost btn-sm" id="btn-find" onclick="findLeads()">🔍 Find Leads</button>
+          <button class="btn btn-red btn-sm" id="btn-find-stop" onclick="stopFinder()" style="display:none">⏹ Stop</button>
+        </div>
+        <p style="font-size:11px;color:var(--muted)" id="current-lead">Ready — click Start to begin calling.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h3>📡 Activity Feed</h3><button class="btn btn-ghost btn-sm" onclick="clearFeed()">Clear</button></div>
+        <div class="live-feed" id="live-feed">
+          <div class="feed-line"><span class="feed-time">--:--</span><span class="feed-msg info">Josh is ready.</span></div>
+        </div>
+      </div>
     </div>
-    <p style="font-size:12px;color:var(--muted)" id="current-lead-text">Josh is ready — click Start to begin calling.</p>
-  </div>
 
-  <!-- Active calls -->
-  <div class="card">
-    <div class="card-header"><h3>🔴 Live Calls</h3></div>
-    <div style="padding:16px 20px">
-      <div class="active-calls" id="active-calls">
-        <div class="no-calls">No active calls</div>
+    <div>
+      <div class="card">
+        <div class="card-hdr"><h3>📊 Industries</h3></div>
+        <div style="padding:14px 16px" id="ind-bars"><div style="font-size:12px;color:var(--muted)">No data yet</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h3>🏙️ Top Cities</h3></div>
+        <div style="padding:14px 16px" id="city-bars"><div style="font-size:12px;color:var(--muted)">No data yet</div></div>
       </div>
     </div>
   </div>
-
-  <!-- Live feed -->
-  <div class="card">
-    <div class="card-header">
-      <h3>📡 Live Feed</h3>
-      <button class="btn btn-ghost btn-sm" onclick="clearFeed()">Clear</button>
-    </div>
-    <div class="live-feed" id="live-feed">
-      <div class="feed-line"><span class="feed-time">--:--</span><span class="feed-msg info">Josh is ready. Click Start to begin.</span></div>
-    </div>
-  </div>
-
 </div>
 </div>
 
-<!-- ══════════════ QUEUE TAB ══════════════ -->
+<!-- ══ QUEUE ══════════════════════════════════════════════════════════════════ -->
 <div class="panel" id="tab-queue">
-<div class="page">
+<div class="scroll-area">
   <div class="stats">
     <div class="stat blue"><div class="val" id="q-total">—</div><div class="lbl">Total</div></div>
     <div class="stat green"><div class="val" id="q-ready">—</div><div class="lbl">Ready</div></div>
@@ -196,446 +344,749 @@
     <div class="stat red"><div class="val" id="q-skip">—</div><div class="lbl">Skip</div></div>
   </div>
   <div class="card">
-    <div class="card-header">
+    <div class="card-hdr">
       <h3>Lead Queue</h3>
-      <select id="queue-filter" onchange="loadQueue()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 10px;font-size:12px;outline:none">
+      <select id="q-filter" onchange="loadQueue()" style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:5px 9px;font-size:12px;outline:none">
         <option value="">All</option><option value="pending">Pending</option>
         <option value="ready">Ready</option><option value="called">Called</option><option value="skip">Skip</option>
       </select>
       <button class="btn btn-ghost btn-sm" onclick="loadQueue()">Refresh</button>
-      <button class="btn btn-primary btn-sm" onclick="exportCSV()">Export CSV</button>
+      <button class="btn btn-primary btn-sm" onclick="exportCSV()">Export</button>
     </div>
     <div class="table-wrap">
-      <table>
-        <thead><tr><th>#</th><th>Business</th><th>Phone</th><th>Industry</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody id="queue-tbody"><tr><td colspan="6" class="no-data">Loading...</td></tr></tbody>
-      </table>
+      <table><thead><tr><th>#</th><th>Business</th><th>Phone</th><th>Industry</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody id="q-tbody"><tr><td colspan="6" class="no-data">Loading...</td></tr></tbody></table>
     </div>
   </div>
 </div>
 </div>
 
-<!-- ══════════════ CRM TAB ══════════════ -->
+<!-- ══ CRM ════════════════════════════════════════════════════════════════════ -->
 <div class="panel" id="tab-crm">
-<div class="page">
+<div class="scroll-area">
+  <div class="stats" style="flex-wrap:wrap">
+    <div class="stat blue"><div class="val" id="c-total">—</div><div class="lbl">Total</div></div>
+    <div class="stat warn"><div class="val" id="c-interested">—</div><div class="lbl">Interested</div></div>
+    <div class="stat green"><div class="val" id="c-closed">—</div><div class="lbl">Closed</div></div>
+    <div class="stat red"><div class="val" id="c-noanswer">—</div><div class="lbl">No Answer</div></div>
+    <div class="stat purple"><div class="val" id="c-rate">—</div><div class="lbl">Close %</div></div>
+    <div class="stat blue"><div class="val" id="c-score">—</div><div class="lbl">Avg Score</div></div>
+  </div>
   <div class="card">
-    <div class="card-header">
+    <div class="card-hdr">
       <h3>Call History</h3>
+      <div class="search-wrap"><input type="text" id="c-search" placeholder="Search..." oninput="filterCRM()" /></div>
+      <select id="c-outcome-filter" onchange="filterCRM()" style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:5px 9px;font-size:12px;outline:none">
+        <option value="">All outcomes</option>
+        <option value="closed">Closed</option><option value="interested">Interested</option>
+        <option value="no_answer">No Answer</option><option value="in_progress">In Progress</option>
+      </select>
       <button class="btn btn-ghost btn-sm" onclick="loadCRM()">Refresh</button>
-      <button class="btn btn-primary btn-sm" onclick="exportCSV()">Export CSV</button>
+      <button class="btn btn-primary btn-sm" onclick="exportCSV()">Export</button>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Business</th><th>Industry</th><th>Outcome</th><th>Date</th></tr></thead>
-        <tbody id="crm-tbody"><tr><td colspan="7" class="no-data">Loading...</td></tr></tbody>
+        <thead><tr><th>#</th><th>Business</th><th>Name / Email</th><th>Industry</th><th>Score</th><th>Outcome</th><th>Stage</th><th>Date</th></tr></thead>
+        <tbody id="c-tbody"><tr><td colspan="8" class="no-data">Loading...</td></tr></tbody>
       </table>
     </div>
   </div>
+  <p style="font-size:11px;color:var(--muted);padding:0 4px">Click any row to view the full conversation transcript.</p>
 </div>
 </div>
 
-<!-- ══════════════ SETTINGS TAB ══════════════ -->
+<!-- ══ SETTINGS ══════════════════════════════════════════════════════════════ -->
 <div class="panel" id="tab-settings">
-<div class="page">
+<div class="scroll-area">
   <div class="settings-grid">
-
-    <div class="setting-group">
+    <div class="sg">
       <h4>📞 Test Mode</h4>
-      <p>Route all calls to your number for testing. Clear this when ready for real calls.</p>
-      <label>Your test number</label>
-      <input type="text" id="test-number" value="+16823985182" placeholder="Leave blank for real calls" />
+      <p>Route all calls to your number for testing.</p>
+      <label>Test phone number</label>
+      <input type="text" id="test-number" value="+16823985182" placeholder="+1..." />
     </div>
-
-    <div class="setting-group">
+    <div class="sg">
       <h4>⏱ Delay Between Calls</h4>
-      <p>How long Josh waits after each call before dialing the next one.</p>
-      <label>Delay: <strong id="delay-label">30 seconds</strong></label>
+      <p>How long Josh waits between calls.</p>
+      <label>Delay: <strong id="delay-label">30s</strong></label>
       <input type="range" id="delay-slider" min="5" max="120" value="30" step="5"
         style="width:100%;accent-color:var(--accent);cursor:pointer"
-        oninput="document.getElementById('delay-label').textContent=this.value+' seconds'" />
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)"><span>5s</span><span>60s</span><span>120s</span></div>
-      <button class="btn btn-primary" onclick="saveDelay()">Save Delay</button>
-      <div id="delay-result" style="font-size:12px;color:var(--muted)"></div>
+        oninput="document.getElementById('delay-label').textContent=this.value+'s'" />
+      <button class="btn btn-primary btn-sm" onclick="saveDelay()">Save</button>
     </div>
-
-    <div class="setting-group">
+    <div class="sg">
       <h4>🔍 Lead Finder</h4>
-      <p>Finds businesses with <strong>no website</strong> and <strong>3.5★ or below</strong> — perfect targets for Josh.</p>
+      <p>Finds businesses with <strong>no website</strong> — 14 industries supported.</p>
       <label>Google Places API Key</label>
-      <input type="password" id="google-api-key" placeholder="AIza..." />
+      <input type="password" id="gapi-key" placeholder="AIza..." />
       <label>Target Cities (one per line)</label>
-      <textarea id="target-cities" placeholder="Dallas TX&#10;Houston TX&#10;Miami FL">Dallas TX
+      <textarea id="target-cities">Dallas TX
 Houston TX
 Austin TX
 Miami FL
 Los Angeles CA
-Chicago IL</textarea>
-      <label style="margin-top:6px">
-        <input type="checkbox" id="no-website-only" checked style="accent-color:var(--accent);margin-right:6px" />
-        Only businesses with <strong>no website</strong>
-      </label>
-      <button class="btn btn-primary" onclick="findLeads()">🔍 Find Leads Now</button>
+Chicago IL
+Atlanta GA
+Phoenix AZ</textarea>
+      <button class="btn btn-primary btn-sm" onclick="findLeads()">🔍 Find Leads</button>
     </div>
-
-    <div class="setting-group">
-      <h4>📊 Import Leads</h4>
-      <p>Upload a CSV with columns: Business Name, Phone Number, Address.</p>
+    <div class="sg">
+      <h4>📊 Import CSV</h4>
+      <p>Upload leads: Business Name, Phone Number, Address.</p>
       <input type="file" id="csv-file" accept=".csv" />
-      <button class="btn btn-primary" onclick="uploadCSV()">Upload CSV</button>
+      <button class="btn btn-primary btn-sm" onclick="uploadCSV()">Upload</button>
       <div id="csv-result" style="font-size:12px;color:var(--muted)"></div>
     </div>
-
-    <div class="setting-group">
-      <h4>📋 Google Sheets Sync</h4>
-      <p>Paste your Google Sheet ID to sync leads automatically.</p>
+    <div class="sg">
+      <h4>📋 Google Sheets</h4>
+      <p>Sync leads from a Google Sheet.</p>
       <label>Sheet ID</label>
       <input type="text" id="sheet-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjg..." />
       <label>Tab name (optional)</label>
       <input type="text" id="sheet-tab" placeholder="Sheet1" />
-      <button class="btn btn-primary" onclick="syncSheets()">Sync Now</button>
+      <button class="btn btn-primary btn-sm" onclick="syncSheets()">Sync</button>
       <div id="sheets-result" style="font-size:12px;color:var(--muted)"></div>
     </div>
-
+    <div class="sg">
+      <h4>🔔 Notifications</h4>
+      <p>Get browser alerts when Josh closes a deal or a new call starts.</p>
+      <button class="btn btn-ghost btn-sm" onclick="requestNotifPermission()" id="btn-notif">Enable Browser Alerts</button>
+      <div id="notif-status" style="font-size:12px;color:var(--muted)"></div>
+    </div>
   </div>
 </div>
+</div>
+
+<!-- ══ CONVERSATION MODAL ════════════════════════════════════════════════════ -->
+<div class="modal-back" id="conv-modal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <div style="flex:1"><h2 id="m-title">Conversation</h2><div class="modal-meta" id="m-meta"></div></div>
+      <button class="modal-x" id="modal-x">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="m-transcript"></div>
+      <div style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px">
+        <label style="font-size:11px;color:var(--muted);margin-bottom:5px;display:block">Notes</label>
+        <textarea id="modal-notes" placeholder="Add notes about this lead..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span id="m-score-lbl" style="font-size:12px;color:var(--muted);margin-right:auto;align-self:center"></span>
+      <button class="btn btn-ghost btn-sm" onclick="saveNotes()">Save Notes</button>
+      <button class="btn btn-ghost btn-sm" id="modal-close-btn">Close</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-  let dialerRunning = false;
-  let dialerPaused = false;
-  let _dialerBusy = false; // prevents double-clicks
+// ── Auth ──────────────────────────────────────────────────────────────────────
+let _token = localStorage.getItem('josh_token') || '';
+let _sound = localStorage.getItem('josh_sound') === 'true';
+let _audioCtx = null;
 
-  // ── Tabs ──
-  document.querySelectorAll('.tab').forEach(t => {
-    t.addEventListener('click', () => {
-      document.querySelectorAll('.tab,.panel').forEach(e => e.classList.remove('active'));
-      t.classList.add('active');
-      document.getElementById('tab-' + t.dataset.tab).classList.add('active');
-    });
-  });
+async function checkAuth() {
+  const r = await fetch('/api/auth/check', {headers: _token ? {'X-Josh-Token': _token} : {}});
+  const d = await r.json();
+  if (d.required && !d.ok) {
+    document.getElementById('auth-overlay').style.display = 'flex';
+  }
+}
 
-  // ── Tags ──
-  function industryTag(i){const m={hvac:'t-blue',plumbing:'t-blue',electrician:'t-warn',repair:'t-purple',general:'t-muted'};return`<span class="tag ${m[i]||'t-muted'}">${i||'—'}</span>`}
-  function outcomeTag(o){const m={closed:['t-green','Closed ✓'],interested:['t-warn','Interested'],in_progress:['t-muted','In Progress'],no_answer:['t-red','No Answer'],calling:['t-blue','Calling…']};const[c,l]=m[o]||['t-muted',o||'—'];return`<span class="tag ${c}">${l}</span>`}
-  function statusTag(s){const m={ready:['t-green','Ready'],pending:['t-muted','Pending'],maybe:['t-warn','Maybe'],called:['t-blue','Called'],skip:['t-red','Skip']};const[c,l]=m[s]||['t-muted',s];return`<span class="tag ${c}">${l}</span>`}
+async function doLogin() {
+  const pw = document.getElementById('auth-input').value;
+  const r = await fetch('/api/auth', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pw})});
+  const d = await r.json();
+  if (d.ok) {
+    _token = d.token || '';
+    if (_token) localStorage.setItem('josh_token', _token);
+    document.getElementById('auth-overlay').style.display = 'none';
+  } else {
+    document.getElementById('auth-error').style.display = 'block';
+    document.getElementById('auth-input').value = '';
+    document.getElementById('auth-input').focus();
+  }
+}
 
-  // ── Dialer ──
-  async function toggleDialer() {
-    if (_dialerBusy) return; // block double-clicks
-    _dialerBusy = true;
+// ── Sound ─────────────────────────────────────────────────────────────────────
+function toggleSound() {
+  _sound = !_sound;
+  localStorage.setItem('josh_sound', _sound);
+  const btn = document.getElementById('btn-sound');
+  btn.textContent = _sound ? '🔔' : '🔕';
+  btn.classList.toggle('on', _sound);
+}
 
-    const btn = document.getElementById('big-btn');
-
-    try {
-      if (dialerRunning) {
-        // Immediately show idle state
-        btn.className = 'big-btn start';
-        btn.innerHTML = '<div class="big-btn-icon">📞</div><div class="big-btn-label">Start Josh</div>';
-        await fetch('/api/dialer/stop', {method:'POST'});
-        dialerRunning = false;
-        showToast('Josh stopped', '');
-      } else {
-        // Immediately flash red so user knows it registered
-        btn.className = 'big-btn stop';
-        btn.innerHTML = '<div class="big-btn-icon">⏹</div><div class="big-btn-label">Stop Josh</div>';
-        const testNum = document.getElementById('test-number').value.trim();
-        const r = await fetch('/api/dialer/start', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({test_number: testNum || null})
-        });
-        const d = await r.json();
-        if (d.error) {
-          // Revert button if start failed
-          btn.className = 'big-btn start';
-          btn.innerHTML = '<div class="big-btn-icon">📞</div><div class="big-btn-label">Start Josh</div>';
-          showToast(d.error, 'err');
-          return;
-        }
-        dialerRunning = true;
-        showToast(testNum ? `Josh calling test number for each lead` : `Josh is calling your leads!`, 'ok');
-      }
-    } catch(e) {
-      showToast('Network error — try again', 'err');
-    } finally {
-      // Unlock after poll confirms state
-      setTimeout(() => { _dialerBusy = false; }, 3500);
+function playTone(type) {
+  if (!_sound) return;
+  try {
+    if (!_audioCtx) _audioCtx = new AudioContext();
+    const ctx = _audioCtx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    if (type === 'call') {
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+      osc.start(); osc.stop(ctx.currentTime + 0.25);
+    } else if (type === 'close') {
+      [523, 659, 784].forEach((f, i) => {
+        const o2 = ctx.createOscillator();
+        const g2 = ctx.createGain();
+        o2.connect(g2); g2.connect(ctx.destination);
+        o2.frequency.value = f;
+        g2.gain.setValueAtTime(0.12, ctx.currentTime + i*0.1);
+        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.1 + 0.3);
+        o2.start(ctx.currentTime + i*0.1);
+        o2.stop(ctx.currentTime + i*0.1 + 0.3);
+      });
     }
-  }
+  } catch(e) {}
+}
 
-  async function pauseDialer() {
-    const r = await fetch('/api/dialer/pause', {method:'POST'});
-    const d = await r.json();
-    showToast(d.paused ? 'Paused' : 'Resumed', '');
-  }
+async function requestNotifPermission() {
+  if (!('Notification' in window)) { document.getElementById('notif-status').textContent = 'Not supported in this browser'; return; }
+  const perm = await Notification.requestPermission();
+  document.getElementById('notif-status').textContent = perm === 'granted' ? '✅ Alerts enabled' : '❌ Permission denied';
+}
 
-  // ── Stats & Status polling ──
-  async function pollStatus() {
-    const [dialerRes, queueRes, statsRes, activeRes] = await Promise.all([
+function sendNotif(title, body) {
+  if (Notification.permission === 'granted') new Notification(title, {body, silent: true});
+}
+
+// ── Socket.IO ─────────────────────────────────────────────────────────────────
+const socket = io({extraHeaders: _token ? {'X-Josh-Token': _token} : {}});
+let liveCalls = {}; // call_sid → {data, messages[], startedAt}
+
+socket.on('connect', () => addFeed('Connected to Josh server', 'ok'));
+socket.on('disconnect', () => addFeed('Disconnected — reconnecting...', 'err'));
+
+socket.on('call_started', (d) => {
+  liveCalls[d.call_sid] = {data: d, messages: [], startedAt: Date.now()};
+  renderLiveCall(d.call_sid);
+  updateLiveBadge();
+  addFeed(`📞 Call started — ${d.business_name || 'Unknown'} (${d.industry || '—'})`, 'ok');
+  playTone('call');
+  sendNotif('📞 New call', d.business_name || 'Unknown prospect');
+  // Auto-switch to Live tab if on Command
+  if (document.querySelector('.tab[data-tab="live"]') && !document.getElementById('tab-live').classList.contains('active')) {
+    // Show badge pulse but don't force switch — user might be doing something
+  }
+});
+
+socket.on('call_turn', (d) => {
+  if (!liveCalls[d.call_sid]) {
+    // First turn without a call_started (Vapi case) — create entry
+    liveCalls[d.call_sid] = {data: {call_sid: d.call_sid, business_name: '—', score: d.score||25, stage: d.stage||'opening'}, messages: [], startedAt: Date.now()};
+    renderLiveCall(d.call_sid);
+    updateLiveBadge();
+  }
+  const call = liveCalls[d.call_sid];
+  if (d.score != null) call.data.score = d.score;
+  if (d.stage) call.data.stage = d.stage;
+  if (d.outcome) call.data.outcome = d.outcome;
+  // Remove previous partial from same role
+  if (d.partial) {
+    call.messages = call.messages.filter(m => !(m.partial && m.role === d.role));
+  }
+  call.messages.push({role: d.role, text: d.text, partial: !!d.partial, ts: Date.now()});
+  updateLiveCallCard(d.call_sid);
+});
+
+socket.on('call_ended', (d) => {
+  const call = liveCalls[d.call_sid];
+  const biz = call?.data?.business_name || d.business_name || 'Call';
+  delete liveCalls[d.call_sid];
+  removeCallCard(d.call_sid);
+  updateLiveBadge();
+  addFeed(`📵 Call ended — ${biz} · ${d.outcome}`, d.outcome === 'closed' || d.outcome === 'interested' ? 'ok' : 'info');
+  if (d.outcome === 'closed' || d.outcome === 'interested') {
+    playTone('close');
+    sendNotif('🎉 Deal ' + (d.outcome === 'closed' ? 'CLOSED' : 'Interested'), biz);
+  }
+  setTimeout(loadCRM, 1500); // refresh CRM after call ends
+});
+
+socket.on('call_outcome_updated', (d) => {
+  if (liveCalls[d.call_sid]) {
+    liveCalls[d.call_sid].data.outcome = d.outcome;
+    updateLiveCallCard(d.call_sid);
+  }
+});
+
+// ── Live call rendering ───────────────────────────────────────────────────────
+function renderLiveCall(sid) {
+  const grid = document.getElementById('live-calls-grid');
+  const empty = document.getElementById('live-empty');
+  grid.style.display = '';
+  empty.style.display = 'none';
+
+  const card = document.createElement('div');
+  card.className = 'call-card';
+  card.id = `call-${sid}`;
+  card.innerHTML = callCardHTML(sid);
+  grid.appendChild(card);
+  startDurationTimer(sid);
+}
+
+function callCardHTML(sid) {
+  const c = liveCalls[sid];
+  if (!c) return '';
+  const {data} = c;
+  const score = Math.max(0, Math.min(100, data.score || 25));
+  let sColor = '#4a5570';
+  if (score >= 80) sColor = '#3ddc97';
+  else if (score >= 60) sColor = '#f4a642';
+  else if (score >= 40) sColor = '#4f8ef7';
+
+  const stageMap = {opening:'t-muted',discovery:'t-blue',agitation:'t-warn',pitch:'t-purple',trial_close:'t-warn',price:'t-green',close:'t-green',intake:'t-pink',objection:'t-red'};
+  const stageCls = stageMap[data.stage] || 't-muted';
+
+  const IND_COLORS = {hvac:'t-blue',plumbing:'t-blue',electrician:'t-warn',roofing:'t-warn',landscaping:'t-green',painting:'t-purple',pest_control:'t-red',pressure_washing:'t-blue',cleaning:'t-green',concrete:'t-muted',fencing:'t-muted',garage_door:'t-warn',pool:'t-blue',tree_service:'t-green',repair:'t-purple'};
+  const indCls = IND_COLORS[data.industry] || 't-muted';
+
+  const msgs = (c.messages || []).slice(-12);
+  const transcriptHTML = msgs.length
+    ? msgs.map(m => `<div class="ct-line ${m.role}${m.partial?' partial':' new-turn'}"><span class="ct-who">${m.role === 'josh' ? 'Josh' : 'Prospect'}</span><div class="ct-text">${escH(m.text)}</div></div>`).join('')
+    : `<div style="color:var(--muted);font-size:12px;padding:8px">Waiting for first response...</div>`;
+
+  return `
+    <div class="call-card-top">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="live-indicator"><div class="dot"></div>LIVE</div>
+        <span class="call-card-duration" data-call-duration="${sid}">0:00</span>
+        ${data.outcome ? `<span class="tag t-warn" style="margin-left:auto">${data.outcome.replace('_',' ')}</span>` : ''}
+      </div>
+      <div class="call-card-biz" style="margin-top:6px">${escH(data.business_name || '—')}</div>
+      <div class="call-card-meta">
+        ${data.industry ? `<span class="tag ${indCls}">${data.industry.replace(/_/g,' ')}</span>` : ''}
+        ${data.city ? `<span style="font-size:11px;color:var(--muted)">${escH(data.city)}</span>` : ''}
+        ${data.stage ? `<span class="tag ${stageCls}">${data.stage.replace('_',' ')}</span>` : ''}
+      </div>
+    </div>
+    <div class="score-row">
+      <span class="score-label">Score</span>
+      <div class="score-track"><div class="score-fill" style="width:${score}%;background:${sColor}"></div></div>
+      <span class="score-num" style="color:${sColor}">${score}</span>
+    </div>
+    <div class="call-transcript" id="transcript-${sid}">${transcriptHTML}</div>
+    <div class="call-actions">
+      <button class="btn btn-red btn-sm" onclick="endCallManually('${sid}')">⏹ End</button>
+      <button class="btn btn-warn btn-sm" onclick="setOutcome('${sid}','interested')">★ Interested</button>
+      <button class="btn btn-green btn-sm" onclick="setOutcome('${sid}','closed')">✓ Closed</button>
+    </div>`;
+}
+
+function updateLiveCallCard(sid) {
+  const el = document.getElementById(`call-${sid}`);
+  if (!el) return;
+  const c = liveCalls[sid];
+  if (!c) return;
+
+  // Update score
+  const score = Math.max(0, Math.min(100, c.data.score || 25));
+  let sColor = '#4a5570';
+  if (score >= 80) sColor = '#3ddc97';
+  else if (score >= 60) sColor = '#f4a642';
+  else if (score >= 40) sColor = '#4f8ef7';
+  const sf = el.querySelector('.score-fill');
+  const sn = el.querySelector('.score-num');
+  if (sf) { sf.style.width = score + '%'; sf.style.background = sColor; }
+  if (sn) { sn.textContent = score; sn.style.color = sColor; }
+
+  // Update stage tag
+  const stageMap = {opening:'t-muted',discovery:'t-blue',agitation:'t-warn',pitch:'t-purple',trial_close:'t-warn',price:'t-green',close:'t-green',intake:'t-pink',objection:'t-red'};
+  const stageEls = el.querySelectorAll('.call-card-meta .tag');
+  // (Just re-render the whole card to keep it simple)
+  el.innerHTML = callCardHTML(sid);
+
+  // Scroll transcript to bottom
+  const transcript = document.getElementById(`transcript-${sid}`);
+  if (transcript) transcript.scrollTop = transcript.scrollHeight;
+}
+
+function removeCallCard(sid) {
+  const el = document.getElementById(`call-${sid}`);
+  if (el) el.remove();
+  const grid = document.getElementById('live-calls-grid');
+  if (grid && !grid.children.length) {
+    grid.style.display = 'none';
+    document.getElementById('live-empty').style.display = '';
+  }
+}
+
+function updateLiveBadge() {
+  const n = Object.keys(liveCalls).length;
+  document.getElementById('badge-live').textContent = n;
+  document.getElementById('live-count').textContent = n + ' LIVE';
+  const badge = document.getElementById('live-badge');
+  badge.classList.toggle('has-calls', n > 0);
+}
+
+// Duration timers
+const _timers = {};
+function startDurationTimer(sid) {
+  _timers[sid] = setInterval(() => {
+    const c = liveCalls[sid];
+    if (!c) { clearInterval(_timers[sid]); return; }
+    const elapsed = Math.floor((Date.now() - c.startedAt) / 1000);
+    const m = Math.floor(elapsed / 60);
+    const s = (elapsed % 60).toString().padStart(2, '0');
+    const el = document.querySelector(`[data-call-duration="${sid}"]`);
+    if (el) el.textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+// ── Call controls ─────────────────────────────────────────────────────────────
+async function endCallManually(sid) {
+  if (!confirm('End this call?')) return;
+  await fetch(`/api/calls/${sid}/end`, {method:'POST', headers: _token ? {'X-Josh-Token': _token} : {}});
+  showToast('Call ended', '');
+}
+
+async function setOutcome(sid, outcome) {
+  await fetch(`/api/calls/${sid}/outcome`, {
+    method:'POST',
+    headers: {'Content-Type':'application/json', ..._token ? {'X-Josh-Token': _token} : {}},
+    body: JSON.stringify({outcome})
+  });
+  showToast(`Marked as ${outcome}`, 'ok');
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab,.panel').forEach(e => e.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('tab-' + t.dataset.tab).classList.add('active');
+    if (t.dataset.tab === 'crm') loadCRM();
+    if (t.dataset.tab === 'queue') loadQueue();
+  });
+});
+
+// ── Tag helpers ───────────────────────────────────────────────────────────────
+const IND_COLORS = {hvac:'t-blue',plumbing:'t-blue',electrician:'t-warn',roofing:'t-warn',landscaping:'t-green',painting:'t-purple',pest_control:'t-red',pressure_washing:'t-blue',cleaning:'t-green',concrete:'t-muted',fencing:'t-muted',garage_door:'t-warn',pool:'t-blue',tree_service:'t-green',repair:'t-purple',general:'t-muted'};
+
+function iTag(i) { return `<span class="tag ${IND_COLORS[i]||'t-muted'}">${(i||'—').replace(/_/g,' ')}</span>`; }
+function oTag(o) {
+  const m={closed:['t-green','Closed ✓'],interested:['t-warn','Interested'],in_progress:['t-muted','In Progress'],no_answer:['t-red','No Answer'],calling:['t-blue','Calling…']};
+  const [c,l]=m[o]||['t-muted',o||'—'];
+  return `<span class="tag ${c}">${l}</span>`;
+}
+function sTag(s) {
+  const m={ready:['t-green','Ready'],pending:['t-muted','Pending'],maybe:['t-warn','Maybe'],called:['t-blue','Called'],skip:['t-red','Skip']};
+  const [c,l]=m[s]||['t-muted',s];
+  return `<span class="tag ${c}">${l}</span>`;
+}
+function scoreBar(v) {
+  if (v==null) return '—';
+  const s=Math.max(0,Math.min(100,v));
+  let c='#4a5570';
+  if(s>=80)c='#3ddc97';else if(s>=60)c='#f4a642';else if(s>=40)c='#4f8ef7';
+  return `<div class="sbar"><div class="sbar-track"><div class="sbar-fill" style="width:${s}%;background:${c}"></div></div><span class="sbar-num" style="color:${c}">${s}</span></div>`;
+}
+function stTag(st) {
+  const m={opening:'t-muted',discovery:'t-blue',agitation:'t-warn',pitch:'t-purple',trial_close:'t-warn',price:'t-green',close:'t-green',intake:'t-pink',objection:'t-red'};
+  return `<span class="tag ${m[st]||'t-muted'}">${(st||'—').replace('_',' ')}</span>`;
+}
+
+// ── Dialer ────────────────────────────────────────────────────────────────────
+let dialerRunning=false, dialerPaused=false, _dialerBusy=false;
+
+async function toggleDialer() {
+  if (_dialerBusy) return;
+  _dialerBusy = true;
+  const btn = document.getElementById('big-btn');
+  try {
+    if (dialerRunning) {
+      btn.className='big-btn start'; btn.innerHTML='<div class="big-btn-icon">📞</div><div class="big-btn-lbl">Start Josh</div>';
+      await fetch('/api/dialer/stop', {method:'POST'});
+      dialerRunning=false; showToast('Josh stopped','');
+    } else {
+      btn.className='big-btn stop'; btn.innerHTML='<div class="big-btn-icon">⏹</div><div class="big-btn-lbl">Stop Josh</div>';
+      const testNum=document.getElementById('test-number').value.trim();
+      const r=await fetch('/api/dialer/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({test_number:testNum||null})});
+      const d=await r.json();
+      if(d.error){btn.className='big-btn start';btn.innerHTML='<div class="big-btn-icon">📞</div><div class="big-btn-lbl">Start Josh</div>';showToast(d.error,'err');return;}
+      dialerRunning=true;
+      showToast(testNum?'Josh calling test number':'Josh is live — calling leads!','ok');
+    }
+  } catch(e){showToast('Network error','err');}
+  finally{setTimeout(()=>{_dialerBusy=false;},3500);}
+}
+
+async function pauseDialer(){
+  const r=await fetch('/api/dialer/pause',{method:'POST'});
+  const d=await r.json();
+  showToast(d.paused?'Paused':'Resumed','');
+}
+
+// ── Polling ───────────────────────────────────────────────────────────────────
+async function pollStatus() {
+  try {
+    const [dR,qR,sR,aR]=await Promise.all([
       fetch('/api/dialer/status'),
       fetch('/api/queue/stats'),
       fetch('/api/stats'),
       fetch('/api/active-calls'),
     ]);
-    const dialer = await dialerRes.json();
-    const queue = await queueRes.json();
-    const stats = await statsRes.json();
-    const active = await activeRes.json();
+    const dialer=await dR.json(), queue=await qR.json(), stats=await sR.json(), active=await aR.json();
+    dialerRunning=dialer.running; dialerPaused=dialer.paused;
 
-    // Update dialer state
-    dialerRunning = dialer.running;
-    dialerPaused = dialer.paused;
+    const btn=document.getElementById('big-btn');
+    const pauseBtn=document.getElementById('btn-pause');
+    if(dialer.running&&!dialer.paused){btn.className='big-btn stop';btn.innerHTML='<div class="big-btn-icon">⏹</div><div class="big-btn-lbl">Stop Josh</div>';pauseBtn.style.display='';pauseBtn.textContent='⏸ Pause';}
+    else if(dialer.paused){btn.className='big-btn paused';btn.innerHTML='<div class="big-btn-icon">▶️</div><div class="big-btn-lbl">Resume</div>';pauseBtn.textContent='▶️ Resume';}
+    else{btn.className='big-btn start';btn.innerHTML='<div class="big-btn-icon">📞</div><div class="big-btn-lbl">Start Josh</div>';pauseBtn.style.display='none';}
 
-    // Big button
-    const btn = document.getElementById('big-btn');
-    const badge = document.getElementById('status-badge');
-    const statusText = document.getElementById('status-text');
-    const pauseBtn = document.getElementById('btn-pause');
+    const cl=dialer.current_lead;
+    document.getElementById('current-lead').textContent=cl?`Calling: ${cl.business_name} (${cl.industry}) — ${cl.phone}`:dialer.running?'Dialing next lead...':'Ready — click Start to begin calling.';
 
-    if (dialer.running && !dialer.paused) {
-      btn.className = 'big-btn stop';
-      btn.innerHTML = '<div class="big-btn-icon">⏹</div><div class="big-btn-label">Stop Josh</div>';
-      badge.className = 'status-badge running';
-      statusText.textContent = 'Running';
-      pauseBtn.style.display = '';
-      pauseBtn.textContent = '⏸ Pause';
-    } else if (dialer.paused) {
-      btn.className = 'big-btn paused';
-      btn.innerHTML = '<div class="big-btn-icon">▶️</div><div class="big-btn-label">Resume</div>';
-      badge.className = 'status-badge paused';
-      statusText.textContent = 'Paused';
-      pauseBtn.textContent = '▶️ Resume';
-    } else {
-      btn.className = 'big-btn start';
-      btn.innerHTML = '<div class="big-btn-icon">📞</div><div class="big-btn-label">Start Josh</div>';
-      badge.className = 'status-badge idle';
-      statusText.textContent = 'Ready';
-      pauseBtn.style.display = 'none';
-    }
+    const pending=(queue.pending||0)+(queue.ready||0);
+    document.getElementById('s-queue').textContent=pending;
+    document.getElementById('s-active').textContent=active.length;
+    document.getElementById('s-calls').textContent=dialer.calls_made||0;
+    document.getElementById('s-interested').textContent=stats.interested||0;
+    document.getElementById('s-closed').textContent=stats.closed||0;
+    document.getElementById('s-rate').textContent=stats.conversion_rate?stats.conversion_rate+'%':'—';
 
-    // Current lead
-    const cl = dialer.current_lead;
-    document.getElementById('current-lead-text').textContent = cl
-      ? `Now calling: ${cl.business_name} (${cl.industry}) — ${cl.phone}`
-      : dialer.running ? 'Dialing next lead...' : 'Josh is ready — click Start to begin calling.';
+    const total=Object.values(queue).reduce((a,b)=>a+b,0);
+    document.getElementById('badge-queue').textContent=total||0;
+    document.getElementById('badge-crm').textContent=(stats.interested||0)+(stats.closed||0);
 
-    // Stats
-    const total = Object.values(queue).reduce((a,b)=>a+b,0);
-    const pending = (queue.pending||0) + (queue.ready||0);
-    document.getElementById('s-queue').textContent = pending;
-    document.getElementById('s-active').textContent = active.length;
-    document.getElementById('s-calls').textContent = dialer.calls_made || 0;
-    document.getElementById('s-interested').textContent = stats.interested || 0;
-    document.getElementById('s-closed').textContent = stats.closed || 0;
+    updateFeed(dialer.log||[]);
+    updateIndustryBars(stats.by_industry||[]);
+    updateCityBars(stats.by_city||[]);
+  } catch(e){}
+}
 
-    // Tab counts
-    document.getElementById('tab-queue-count').textContent = total || 0;
-    const crmTotal = (stats.interested||0) + (stats.closed||0) + (stats.no_answer||0);
-    document.getElementById('tab-crm-count').textContent = crmTotal || 0;
+// ── Feed ──────────────────────────────────────────────────────────────────────
+let _feedLen=0;
+function updateFeed(logs){
+  if(!logs.length||logs.length===_feedLen)return;
+  _feedLen=logs.length;
+  const feed=document.getElementById('live-feed');
+  feed.innerHTML=logs.map(l=>{
+    const cls=l.msg.includes('Error')?'err':l.msg.includes('✓')||l.msg.includes('Connected')?'ok':'info';
+    return `<div class="feed-line"><span class="feed-time">${l.time}</span><span class="feed-msg ${cls}">${l.msg}</span></div>`;
+  }).join('');
+  feed.scrollTop=feed.scrollHeight;
+}
+function addFeed(msg,cls='info'){
+  const feed=document.getElementById('live-feed');
+  const t=new Date().toTimeString().slice(0,5);
+  const div=document.createElement('div');
+  div.className='feed-line';
+  div.innerHTML=`<span class="feed-time">${t}</span><span class="feed-msg ${cls}">${msg}</span>`;
+  const empty=feed.querySelector('.feed-line');
+  if(feed.children.length===1&&empty.querySelector('.feed-time').textContent==='--:--')feed.innerHTML='';
+  feed.appendChild(div);
+  feed.scrollTop=feed.scrollHeight;
+  _feedLen++;
+}
+function clearFeed(){document.getElementById('live-feed').innerHTML='';_feedLen=0;}
 
-    // Live feed
-    updateFeed(dialer.log || []);
+function updateIndustryBars(data){
+  const el=document.getElementById('ind-bars');
+  if(!data.length){el.innerHTML='<div style="font-size:12px;color:var(--muted)">No data yet</div>';return;}
+  const max=Math.max(...data.map(d=>d.count));
+  el.innerHTML=data.map(d=>`<div class="ind-bar-item"><span class="ind-bar-label">${(d.industry||'?').replace(/_/g,' ')}</span><div class="ind-bar-track"><div class="ind-bar-fill" style="width:${Math.round(d.count/max*100)}%;background:var(--accent)"></div></div><span class="ind-bar-count">${d.count}</span></div>`).join('');
+}
+function updateCityBars(data){
+  const el=document.getElementById('city-bars');
+  if(!data.length){el.innerHTML='<div style="font-size:12px;color:var(--muted)">No data yet</div>';return;}
+  const max=Math.max(...data.map(d=>d.count));
+  el.innerHTML=data.map(d=>`<div class="ind-bar-item"><span class="ind-bar-label">${d.city||'?'}</span><div class="ind-bar-track"><div class="ind-bar-fill" style="width:${Math.round(d.count/max*100)}%;background:var(--green)"></div></div><span class="ind-bar-count">${d.count}</span></div>`).join('');
+}
 
-    // Active calls
-    const ac = document.getElementById('active-calls');
-    if (!active.length) {
-      ac.innerHTML = '<div class="no-calls">No active calls</div>';
-    } else {
-      ac.innerHTML = active.map(c => `
-        <div class="call-card">
-          <div class="biz">${c.name||'Prospect'}</div>
-          <div class="meta">${c.industry||'—'} · ${outcomeTag(c.outcome)} · ${c.turns} turns</div>
-        </div>`).join('');
-    }
-  }
+// ── Queue ─────────────────────────────────────────────────────────────────────
+async function loadQueue(){
+  const filter=document.getElementById('q-filter')?.value||'';
+  const [qR,sR]=await Promise.all([fetch('/api/queue'+(filter?`?status=${filter}`:'')),fetch('/api/queue/stats')]);
+  const queue=await qR.json(), stats=await sR.json();
+  const total=Object.values(stats).reduce((a,b)=>a+b,0);
+  document.getElementById('q-total').textContent=total;
+  document.getElementById('q-ready').textContent=stats.ready||0;
+  document.getElementById('q-pending').textContent=stats.pending||0;
+  document.getElementById('q-called').textContent=stats.called||0;
+  document.getElementById('q-skip').textContent=stats.skip||0;
+  const tbody=document.getElementById('q-tbody');
+  if(!queue.length){tbody.innerHTML='<tr><td colspan="6" class="no-data">No leads — use Find Leads or upload a CSV</td></tr>';return;}
+  tbody.innerHTML=queue.map(l=>`<tr>
+    <td style="color:var(--muted)">${l.id}</td>
+    <td><strong>${l.business_name||'—'}</strong><br><span style="font-size:11px;color:var(--muted)">${(l.address||'').slice(0,36)}</span></td>
+    <td style="font-family:monospace;font-size:12px">${l.phone}</td>
+    <td>${iTag(l.industry)}</td>
+    <td>${sTag(l.status)}</td>
+    <td>
+      ${l.status!=='called'&&l.status!=='skip'?`<button class="btn btn-green btn-sm" onclick="event.stopPropagation();callOne('${l.phone}','${(l.business_name||'').replace(/'/g,"\\'")}','${l.industry||''}','${(l.address||'').replace(/'/g,"\\'")}')">📞</button> `:''}
+      ${l.status!=='skip'?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();skipLead('${l.phone}')">Skip</button>`:''}
+    </td>
+  </tr>`).join('');
+}
+async function callOne(phone,biz,ind,addr){
+  const testNum=document.getElementById('test-number').value.trim();
+  const r=await fetch('/api/queue/call-lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,business_name:biz,industry:ind,address:addr,test_number:testNum||null})});
+  const d=await r.json();
+  if(d.error){showToast(d.error,'err');return;}
+  showToast(`📞 Calling ${biz}...`,'ok');
+  setTimeout(loadQueue,2000);
+}
+async function skipLead(phone){
+  await fetch('/api/queue/update-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,status:'skip'})});
+  loadQueue();
+}
 
-  // ── Live feed ──
-  let lastFeedLen = 0;
-  function updateFeed(logs) {
-    if (!logs.length || logs.length === lastFeedLen) return;
-    lastFeedLen = logs.length;
-    const feed = document.getElementById('live-feed');
-    feed.innerHTML = logs.map(l => {
-      const cls = l.msg.includes('Error') ? 'error' : l.msg.includes('Connected') ? 'success' : 'info';
-      return `<div class="feed-line"><span class="feed-time">${l.time}</span><span class="feed-msg ${cls}">${l.msg}</span></div>`;
-    }).join('');
-    feed.scrollTop = feed.scrollHeight;
-  }
-  function clearFeed() { document.getElementById('live-feed').innerHTML = ''; lastFeedLen = 0; }
+// ── CRM ───────────────────────────────────────────────────────────────────────
+let _allLeads=[];
+async function loadCRM(){
+  const [lR,sR]=await Promise.all([fetch('/api/leads'),fetch('/api/stats')]);
+  _allLeads=await lR.json();
+  const stats=await sR.json();
+  document.getElementById('c-total').textContent=stats.total||0;
+  document.getElementById('c-interested').textContent=stats.interested||0;
+  document.getElementById('c-closed').textContent=stats.closed||0;
+  document.getElementById('c-noanswer').textContent=stats.no_answer||0;
+  document.getElementById('c-rate').textContent=stats.conversion_rate?stats.conversion_rate+'%':'0%';
+  document.getElementById('c-score').textContent=stats.avg_score||'—';
+  renderCRM(_allLeads);
+}
+function renderCRM(leads){
+  const tbody=document.getElementById('c-tbody');
+  if(!leads.length){tbody.innerHTML='<tr><td colspan="8" class="no-data">No calls yet</td></tr>';return;}
+  tbody.innerHTML=leads.map(l=>`<tr onclick="openModal(${l.id})">
+    <td style="color:var(--muted)">${l.id}</td>
+    <td><strong>${l.business||'—'}</strong>${l.city?`<br><span style="font-size:11px;color:var(--muted)">${l.city}</span>`:''}</td>
+    <td style="font-size:12px">${l.name||'—'}<br><span style="color:var(--muted)">${l.email||l.phone||'—'}</span></td>
+    <td>${l.industry?iTag(l.industry):'—'}</td>
+    <td>${scoreBar(l.score)}</td>
+    <td>${oTag(l.outcome)}</td>
+    <td>${stTag(l.stage)}</td>
+    <td style="color:var(--muted);font-size:11px">${(l.created_at||'').slice(0,16).replace('T',' ')}</td>
+  </tr>`).join('');
+}
+function filterCRM(){
+  const q=(document.getElementById('c-search').value||'').toLowerCase();
+  const out=document.getElementById('c-outcome-filter').value;
+  renderCRM(_allLeads.filter(l=>{
+    const mQ=!q||[l.name,l.email,l.business,l.industry,l.city,l.phone].some(v=>v&&v.toLowerCase().includes(q));
+    return mQ&&(!out||l.outcome===out);
+  }));
+}
+function exportCSV(){window.location.href='/api/leads/export';}
 
-  // ── Queue ──
-  async function loadQueue() {
-    const filter = document.getElementById('queue-filter')?.value || '';
-    const [qRes, statsRes] = await Promise.all([
-      fetch('/api/queue' + (filter ? `?status=${filter}` : '')),
-      fetch('/api/queue/stats')
-    ]);
-    const queue = await qRes.json();
-    const stats = await statsRes.json();
+// ── Modal ─────────────────────────────────────────────────────────────────────
+let _modalId=null;
+async function openModal(id){
+  _modalId=id;
+  const r=await fetch(`/api/leads/${id}`);
+  const l=await r.json();
+  if(l.error){showToast('Could not load lead','err');return;}
+  document.getElementById('m-title').textContent=l.business||`Lead #${id}`;
+  document.getElementById('m-meta').innerHTML=[l.name?`<strong>${l.name}</strong>`:null,l.email,l.phone,l.city,l.industry?iTag(l.industry):null,oTag(l.outcome)].filter(Boolean).join(' · ');
+  document.getElementById('m-score-lbl').textContent=l.score!=null?`Score: ${l.score}/100 · Stage: ${(l.stage||'—').replace('_',' ')}`:'';
+  document.getElementById('modal-notes').value=l.notes||'';
+  const lines=(l.conversation||'').split('\n').filter(s=>s.trim());
+  document.getElementById('m-transcript').innerHTML=lines.map(line=>{
+    const role=line.startsWith('Josh:')?'josh':'prospect';
+    const name=line.startsWith('Josh:')?'Josh':'Prospect';
+    const text=line.replace(/^(Josh|Prospect|Caller):\s*/,'');
+    if(!text.trim()||text.startsWith('['))return'';
+    return`<div class="t-line ${role}"><span class="t-who">${name}</span><div class="t-txt">${escH(text)}</div></div>`;
+  }).filter(Boolean).join('')||'<div style="color:var(--muted);font-size:13px">No transcript available.</div>';
+  document.getElementById('conv-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+async function saveNotes(){
+  if(!_modalId)return;
+  await fetch(`/api/leads/${_modalId}/notes`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({notes:document.getElementById('modal-notes').value})});
+  showToast('Notes saved','ok');
+}
+function closeModal(){document.getElementById('conv-modal').classList.remove('open');document.body.style.overflow='';_modalId=null;}
+document.getElementById('modal-x').onclick=closeModal;
+document.getElementById('modal-close-btn').onclick=closeModal;
+document.getElementById('conv-modal').addEventListener('click',e=>{if(e.target===document.getElementById('conv-modal'))closeModal();});
 
-    const total = Object.values(stats).reduce((a,b)=>a+b,0);
-    document.getElementById('q-total').textContent = total;
-    document.getElementById('q-ready').textContent = stats.ready||0;
-    document.getElementById('q-pending').textContent = stats.pending||0;
-    document.getElementById('q-called').textContent = stats.called||0;
-    document.getElementById('q-skip').textContent = stats.skip||0;
+// ── Lead Finder ───────────────────────────────────────────────────────────────
+async function findLeads(){
+  const apiKey=document.getElementById('gapi-key')?.value.trim();
+  if(!apiKey){showToast('Add Google Places API key in Settings','err');document.querySelector('[data-tab="settings"]').click();return;}
+  const cities=document.getElementById('target-cities').value.split('\n').map(c=>c.trim()).filter(Boolean);
+  document.getElementById('btn-find').disabled=true;document.getElementById('btn-find').textContent='Finding...';document.getElementById('btn-find-stop').style.display='';
+  addFeed('🎯 Lead finder started...','info');
+  const r=await fetch('/api/finder/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({google_api_key:apiKey,cities,require_no_website:true})});
+  const d=await r.json();
+  if(d.error){showToast(d.error,'err');document.getElementById('btn-find').disabled=false;document.getElementById('btn-find').textContent='🔍 Find Leads';document.getElementById('btn-find-stop').style.display='none';return;}
+  pollFinder();
+}
+async function stopFinder(){
+  await fetch('/api/finder/stop',{method:'POST'});
+  document.getElementById('btn-find-stop').style.display='none';document.getElementById('btn-find').disabled=false;document.getElementById('btn-find').textContent='🔍 Find Leads';
+  showToast('Finder stopped','');loadQueue();
+}
+function pollFinder(){
+  fetch('/api/finder/status').then(r=>r.json()).then(d=>{
+    d.log.forEach(l=>addFeed(l.msg,'info'));
+    if(d.running)setTimeout(pollFinder,3000);
+    else{document.getElementById('btn-find-stop').style.display='none';document.getElementById('btn-find').disabled=false;document.getElementById('btn-find').textContent='🔍 Find Leads';if(d.result)showToast(`✅ ${d.result.imported} new leads!`,'ok');loadQueue();}
+  });
+}
 
-    const tbody = document.getElementById('queue-tbody');
-    if (!queue.length) { tbody.innerHTML = '<tr><td colspan="6" class="no-data">No leads yet — use Find Leads or upload a CSV</td></tr>'; return; }
-    tbody.innerHTML = queue.map(l => `<tr>
-      <td style="color:var(--muted)">${l.id}</td>
-      <td><strong>${l.business_name||'—'}</strong><br><span style="font-size:11px;color:var(--muted)">${(l.address||'').slice(0,40)}</span></td>
-      <td style="font-family:monospace;font-size:12px">${l.phone}</td>
-      <td>${industryTag(l.industry)}</td>
-      <td>${statusTag(l.status)}</td>
-      <td>
-        ${l.status!=='called'&&l.status!=='skip'?`<button class="btn btn-green btn-sm" onclick="callOne('${l.phone}','${(l.business_name||'').replace(/'/g,"\\'")}','${l.industry||''}','${(l.address||'').replace(/'/g,"\\'")}')">📞</button>`:''}
-        ${l.status!=='skip'?`<button class="btn btn-ghost btn-sm" onclick="skipLead('${l.phone}')">Skip</button>`:''}
-      </td>
-    </tr>`).join('');
-  }
+// ── Upload / Sheets ───────────────────────────────────────────────────────────
+async function uploadCSV(){
+  const file=document.getElementById('csv-file').files[0];
+  if(!file){showToast('Pick a CSV first','err');return;}
+  const fd=new FormData();fd.append('file',file);
+  document.getElementById('csv-result').textContent='Importing...';
+  const r=await fetch('/api/queue/import-csv',{method:'POST',body:fd});
+  const d=await r.json();
+  const msg=d.error?`❌ ${d.error}`:`✅ ${d.imported} leads imported`;
+  document.getElementById('csv-result').textContent=msg;showToast(msg,d.error?'err':'ok');
+  if(!d.error)loadQueue();
+}
+async function syncSheets(){
+  const sheet_id=document.getElementById('sheet-id').value.trim();
+  const tab_name=document.getElementById('sheet-tab').value.trim();
+  if(!sheet_id){showToast('Enter a Sheet ID','err');return;}
+  document.getElementById('sheets-result').textContent='Syncing...';
+  const r=await fetch('/api/queue/sync-sheets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sheet_id,tab_name})});
+  const d=await r.json();
+  const msg=d.error?`❌ ${d.error}`:`✅ ${d.imported} leads synced`;
+  document.getElementById('sheets-result').textContent=msg;showToast(msg,d.error?'err':'ok');
+  if(!d.error)loadQueue();
+}
+async function saveDelay(){
+  const s=parseInt(document.getElementById('delay-slider').value);
+  const r=await fetch('/api/dialer/delay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seconds:s})});
+  const d=await r.json();showToast(`Delay set to ${d.delay}s`,'ok');
+}
 
-  async function callOne(phone, business, industry, address) {
-    const testNum = document.getElementById('test-number').value.trim();
-    const r = await fetch('/api/queue/call-lead', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({phone, business_name:business, industry, address, test_number:testNum||null})
-    });
-    const d = await r.json();
-    if (d.error) { showToast(d.error, 'err'); return; }
-    showToast(`📞 Calling ${business}...`, 'ok');
-    setTimeout(loadQueue, 2000);
-  }
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show'+(type?' '+type:'');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),4000);
+}
 
-  async function skipLead(phone) {
-    await fetch('/api/queue/update-status', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone,status:'skip'})});
-    loadQueue();
-  }
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function escH(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
 
-  // ── Lead Finder ──
-  async function findLeads() {
-    const apiKey = document.getElementById('google-api-key')?.value.trim();
-    if (!apiKey) { showToast('Add your Google Places API key in Settings first', 'err'); document.querySelector('[data-tab="settings"]').click(); return; }
-    const citiesRaw = document.getElementById('target-cities')?.value || '';
-    const cities = citiesRaw.split('\n').map(c=>c.trim()).filter(Boolean);
-    const maxStars = parseFloat(document.getElementById('max-stars')?.value || 3.5);
-    const noWebsiteOnly = document.getElementById('no-website-only')?.checked !== false;
-    document.getElementById('btn-find').disabled = true;
-    document.getElementById('btn-find').textContent = '🔍 Finding...';
-    addFeedLine(`🎯 Targeting: no website · ${maxStars}★ or below`, 'info');
-    const r = await fetch('/api/finder/start', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({google_api_key:apiKey, cities, max_stars:maxStars, require_no_website:noWebsiteOnly})
-    });
-    const d = await r.json();
-    if (d.error) { showToast(d.error, 'err'); document.getElementById('btn-find').disabled = false; document.getElementById('btn-find').textContent = '🔍 Find Leads'; return; }
-    showToast('Lead finder running...', 'ok');
-    pollFinder();
-  }
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeModal();
+});
 
-  async function stopFinder() {
-    await fetch('/api/finder/stop', {method:'POST'});
-    document.getElementById('btn-find-stop').style.display = 'none';
-    document.getElementById('btn-find').disabled = false;
-    document.getElementById('btn-find').textContent = '🔍 Find Leads';
-    showToast('Lead finder stopped', '');
-    loadQueue();
-  }
-
-  function pollFinder() {
-    fetch('/api/finder/status').then(r=>r.json()).then(d => {
-      d.log.forEach(l => addFeedLine(l.msg, 'info'));
-      if (d.running) {
-        document.getElementById('btn-find-stop').style.display = '';
-        setTimeout(pollFinder, 3000);
-      } else {
-        document.getElementById('btn-find-stop').style.display = 'none';
-        document.getElementById('btn-find').disabled = false;
-        document.getElementById('btn-find').textContent = '🔍 Find Leads';
-        if (d.result) showToast(`✅ Found ${d.result.imported} new leads!`, 'ok');
-        loadQueue();
-      }
-    });
-  }
-
-  function addFeedLine(msg, cls) {
-    const feed = document.getElementById('live-feed');
-    const t = new Date().toTimeString().slice(0,5);
-    const line = document.createElement('div');
-    line.className = 'feed-line';
-    line.innerHTML = `<span class="feed-time">${t}</span><span class="feed-msg ${cls}">${msg}</span>`;
-    feed.appendChild(line);
-    feed.scrollTop = feed.scrollHeight;
-  }
-
-  // ── CRM ──
-  async function loadCRM() {
-    const r = await fetch('/api/leads');
-    const leads = await r.json();
-    const tbody = document.getElementById('crm-tbody');
-    if (!leads.length) { tbody.innerHTML = '<tr><td colspan="7" class="no-data">No completed calls yet</td></tr>'; return; }
-    tbody.innerHTML = leads.map(l => `<tr>
-      <td style="color:var(--muted)">${l.id}</td>
-      <td>${l.name||'—'}</td>
-      <td style="color:var(--muted);font-size:12px">${l.email||'—'}</td>
-      <td>${l.business||'—'}</td>
-      <td>${l.industry?industryTag(l.industry):'—'}</td>
-      <td>${outcomeTag(l.outcome)}</td>
-      <td style="color:var(--muted);font-size:12px">${(l.created_at||'').slice(0,16).replace('T',' ')}</td>
-    </tr>`).join('');
-  }
-
-  function exportCSV() { window.location.href='/api/leads/export'; }
-
-  // ── CSV Upload ──
-  async function uploadCSV() {
-    const file = document.getElementById('csv-file').files[0];
-    if (!file) { showToast('Pick a CSV first', 'err'); return; }
-    const fd = new FormData(); fd.append('file', file);
-    document.getElementById('csv-result').textContent = 'Importing...';
-    const r = await fetch('/api/queue/import-csv', {method:'POST', body:fd});
-    const d = await r.json();
-    const msg = d.error ? `❌ ${d.error}` : `✅ ${d.imported} leads imported`;
-    document.getElementById('csv-result').textContent = msg;
-    showToast(msg, d.error?'err':'ok');
-    if (!d.error) loadQueue();
-  }
-
-  // ── Delay ──
-  async function saveDelay() {
-    const seconds = parseInt(document.getElementById('delay-slider').value);
-    const r = await fetch('/api/dialer/delay', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({seconds})});
-    const d = await r.json();
-    document.getElementById('delay-result').textContent = `✅ Delay set to ${d.delay}s`;
-    showToast(`Delay set to ${d.delay} seconds`, 'ok');
-  }
-
-  // ── Google Sheets ──
-  async function syncSheets() {
-    const sheet_id = document.getElementById('sheet-id').value.trim();
-    const tab_name = document.getElementById('sheet-tab').value.trim();
-    if (!sheet_id) { showToast('Enter a Sheet ID', 'err'); return; }
-    document.getElementById('sheets-result').textContent = 'Syncing...';
-    const r = await fetch('/api/queue/sync-sheets', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({sheet_id,tab_name})});
-    const d = await r.json();
-    const msg = d.error ? `❌ ${d.error}` : `✅ ${d.imported} new leads synced`;
-    document.getElementById('sheets-result').textContent = msg;
-    showToast(msg, d.error?'err':'ok');
-    if (!d.imported === undefined) loadQueue();
-  }
-
-  // ── Toast ──
-  function showToast(msg, type='') {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.className = 'toast show' + (type?' '+type:'');
-    setTimeout(()=>t.classList.remove('show'), 4000);
-  }
-
-  // ── Init ──
-  loadQueue(); loadCRM();
-  pollStatus();
-  setInterval(pollStatus, 3000);
+// ── Init ──────────────────────────────────────────────────────────────────────
+checkAuth();
+loadQueue();loadCRM();
+pollStatus();
+setInterval(pollStatus,3000);
+document.getElementById('btn-sound').textContent=_sound?'🔔':'🔕';
+if(_sound)document.getElementById('btn-sound').classList.add('on');
+if(Notification.permission==='granted')document.getElementById('notif-status').textContent='✅ Alerts enabled';
 </script>
 </body>
 </html>

@@ -128,6 +128,18 @@ def get_call(call_id: str) -> dict:
     return resp.json()
 
 
+def end_call(call_id: str) -> dict:
+    """Hang up an active Vapi call."""
+    resp = requests.delete(
+        f"{VAPI_BASE}/call/{call_id}",
+        headers=_headers(),
+        timeout=10,
+    )
+    if resp.status_code not in (200, 204):
+        raise Exception(f"Vapi end_call failed ({resp.status_code}): {resp.text}")
+    return {"ok": True}
+
+
 def _extract_city(address: str) -> str:
     if not address:
         return ""
