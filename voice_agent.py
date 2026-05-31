@@ -617,6 +617,11 @@ def dashboard():
     return render_template("dashboard.html")
 
 
+@app.route("/leads")
+def lead_finder_page():
+    return render_template("lead_finder_standalone.html")
+
+
 # ── Auth endpoints ───────────────────────────────────────────────────────────
 
 @app.route("/api/auth", methods=["POST"])
