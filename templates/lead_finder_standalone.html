@@ -221,13 +221,21 @@ Phoenix AZ</textarea>
 
       <div style="display:flex;gap:8px">
         <button class="btn btn-green btn-full" id="btn-start" onclick="startFinder()">🔍 Find Leads</button>
-        <button class="btn btn-red btn-sm" id="btn-stop" onclick="stopFinder()" style="display:none">⏹</button>
+        <button class="btn btn-red btn-sm" id="btn-stop" onclick="stopFinder()" style="display:none">⏹ Stop</button>
       </div>
 
       <div style="margin-top:8px;display:flex;gap:8px">
         <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="uploadCSVClick()">📂 Import CSV</button>
         <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="uploadCSV()"/>
         <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="exportLeads()">⬇ Export</button>
+      </div>
+
+      <hr class="divider"/>
+
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Active Calls</div>
+        <div id="active-calls-list" style="font-size:12px;color:var(--muted)">No active calls</div>
+        <button class="btn btn-red btn-sm" id="btn-stop-all" onclick="stopAllCalls()" style="margin-top:8px;width:100%;justify-content:center;display:none">⏹ Stop All Calls</button>
       </div>
     </div>
 
@@ -311,7 +319,7 @@ Phoenix AZ</textarea>
             <th>Industry</th>
             <th>Status</th>
             <th>Imported</th>
-            <th></th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="leads-tbody"></tbody>
@@ -508,26 +516,35 @@ function renderTable(leads) {
   table.style.display = '';
   empty.style.display = 'none';
 
-  document.getElementById('leads-tbody').innerHTML = leads.map(l => `
-    <tr onclick="openDrawer(${l.id})">
+  document.getElementById('leads-tbody').innerHTML = leads.map(l => {
+    const isCalling = _activeCalls[l.phone];
+    const safePhone = (l.phone||'').replace(/'/g, "\\'");
+    const safeBiz = (l.business_name||'').replace(/'/g, "\\'");
+    const safeInd = (l.industry||'').replace(/'/g, "\\'");
+    const safeAddr = (l.address||'').replace(/'/g, "\\'");
+    return `<tr onclick="openDrawer(${l.id})">
       <td style="color:var(--muted);font-size:11px">${l.id}</td>
       <td><strong>${escH(l.business_name || '—')}</strong></td>
       <td style="font-family:monospace;font-size:12px">${l.phone || '—'}</td>
       <td style="font-size:12px;color:var(--muted)">${escH((l.address || '').slice(0, 40))}</td>
       <td>${iTag(l.industry)}</td>
       <td>
-        <select class="status-sel" onclick="event.stopPropagation()" onchange="changeStatus(event,'${l.phone}')">
+        <select class="status-sel" onclick="event.stopPropagation()" onchange="changeStatus(event,'${safePhone}')">
           ${['pending','ready','maybe','called','skip'].map(s =>
             `<option value="${s}"${l.status===s?' selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`
           ).join('')}
         </select>
       </td>
       <td style="font-size:11px;color:var(--muted)">${(l.imported_at||'').slice(0,10)}</td>
-      <td onclick="event.stopPropagation()">
-        <button class="btn btn-ghost btn-sm" onclick="copyText('${l.phone}')" title="Copy phone">📋</button>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap">
+        ${isCalling
+          ? `<button class="btn btn-red btn-sm" onclick="stopCall('${safePhone}')">⏹ Stop</button>`
+          : `<button class="btn btn-primary btn-sm" onclick="callLead('${safePhone}','${safeBiz}','${safeInd}','${safeAddr}')">📞 Call</button>`
+        }
+        <button class="btn btn-ghost btn-sm" onclick="copyText('${safePhone}')" title="Copy phone" style="margin-left:4px">📋</button>
       </td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 }
 
 async function changeStatus(event, phone) {
@@ -541,6 +558,67 @@ async function changeStatus(event, phone) {
   const lead = _allLeads.find(l => l.phone === phone);
   if (lead) lead.status = status;
   await loadStats();
+}
+
+// ── Calling ──────────────────────────────────────────────────────────────────
+let _activeCalls = {}; // phone → call_id
+
+async function callLead(phone, biz, industry, address) {
+  showToast(`📞 Calling ${biz || phone}...`, '');
+  const r = await fetch('/api/queue/call-lead', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({phone, business_name: biz, industry, address}),
+  });
+  const d = await r.json();
+  if (d.error) { showToast('❌ ' + d.error, 'err'); return; }
+  _activeCalls[phone] = d.call_id;
+  filterTable();
+  updateActiveCallsPanel();
+  showToast(`📞 Dialing ${biz || phone}`, 'ok');
+}
+
+async function stopCall(phone) {
+  const callId = _activeCalls[phone];
+  if (!callId) return;
+  const r = await fetch(`/api/calls/${callId}/end`, {method: 'POST'});
+  const d = await r.json();
+  if (d.error) { showToast('❌ ' + d.error, 'err'); return; }
+  delete _activeCalls[phone];
+  filterTable();
+  updateActiveCallsPanel();
+  showToast('Call ended', '');
+}
+
+async function stopAllCalls() {
+  const phones = Object.keys(_activeCalls);
+  if (!phones.length) return;
+  await Promise.all(phones.map(p => fetch(`/api/calls/${_activeCalls[p]}/end`, {method: 'POST'})));
+  _activeCalls = {};
+  filterTable();
+  updateActiveCallsPanel();
+  showToast('All calls stopped', '');
+}
+
+function updateActiveCallsPanel() {
+  const phones = Object.keys(_activeCalls);
+  const panel = document.getElementById('active-calls-list');
+  const stopAllBtn = document.getElementById('btn-stop-all');
+  if (!phones.length) {
+    panel.textContent = 'No active calls';
+    stopAllBtn.style.display = 'none';
+    return;
+  }
+  stopAllBtn.style.display = '';
+  panel.innerHTML = phones.map(p => {
+    const lead = _allLeads.find(l => l.phone === p);
+    const name = lead ? lead.business_name : p;
+    return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border)">
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.2s ease-in-out infinite;flex-shrink:0"></div>
+      <span style="flex:1;color:var(--text);font-size:12px">${escH(name)}</span>
+      <button class="btn btn-red btn-sm" onclick="stopCall('${p.replace(/'/g,"\\'")}')">⏹</button>
+    </div>`;
+  }).join('');
 }
 
 // ── CSV ──────────────────────────────────────────────────────────────────────

@@ -920,8 +920,8 @@ def api_call_specific_lead():
     if not phone:
         return jsonify({"error": "Missing phone"}), 400
 
-    if not all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER]):
-        return jsonify({"error": "Twilio not configured — add credentials to .env"}), 500
+    if not all([VAPI_API_KEY, VAPI_ASSISTANT_ID, VAPI_PHONE_NUMBER_ID]):
+        return jsonify({"error": "Vapi not configured — add VAPI_API_KEY, VAPI_ASSISTANT_ID, VAPI_PHONE_NUMBER_ID to env"}), 500
 
     try:
         base_prompt = SYSTEM_PROMPT.replace("{industry_context}", "").strip()
