@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Rep Finder — Josh</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #161a22;
+      --surface2: #1e2330;
+      --border: #2a3040;
+      --accent: #4f8ef7;
+      --accent2: #3ddc97;
+      --danger: #e05c5c;
+      --warn: #f4a642;
+      --purple: #a78bfa;
+      --text: #e8ecf4;
+      --muted: #6b7894;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 22px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px; color: #fff;
+    }
+    header h1 { font-size: 18px; font-weight: 600; }
+    header .subtitle { font-size: 13px; color: var(--muted); margin-left: 4px; }
+    .nav-link {
+      margin-left: auto;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: color .15s, border-color .15s;
+    }
+    .nav-link:hover { color: var(--text); border-color: var(--accent); }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 20px;
+      width: 100%;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .hero h2 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    .hero p { color: var(--muted); font-size: 15px; }
+
+    .search-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto auto;
+      gap: 12px;
+      align-items: end;
+    }
+    @media (max-width: 640px) {
+      .search-row { grid-template-columns: 1fr; }
+    }
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .field input, .field select {
+      width: 100%;
+      padding: 10px 13px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+    .field input::placeholder { color: var(--muted); }
+    .field select option { background: var(--surface2); }
+
+    .btn-search {
+      padding: 10px 24px;
+      background: linear-gradient(135deg, var(--accent), #3a6fd8);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity .15s;
+      height: 40px;
+      align-self: end;
+    }
+    .btn-search:hover { opacity: .88; }
+    .btn-search:disabled { opacity: .5; cursor: not-allowed; }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 24px;
+    }
+    .badge {
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-green { background: #1a3328; color: var(--accent2); }
+    .badge-blue  { background: #1a2540; color: var(--accent); }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    .spinner.active { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .results-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .rep-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      transition: border-color .15s, transform .1s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .rep-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .rep-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .rep-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1.3;
+    }
+    .rep-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .rep-meta span {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .rep-meta .company { color: var(--accent2); }
+    .rep-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .source-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--surface2);
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; }
+
+    .error-msg {
+      background: #2a1a1a;
+      border: 1px solid var(--danger);
+      color: #e8a0a0;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    .tips {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-top: 28px;
+    }
+    .tips h3 { font-size: 13px; color: var(--accent2); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .05em; }
+    .tips ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .tips li { font-size: 13px; color: var(--muted); padding-left: 16px; position: relative; }
+    .tips li::before { content: "→"; position: absolute; left: 0; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">J</div>
+    <h1>Josh</h1>
+    <span class="subtitle">Sales Rep Finder</span>
+    <a href="/" class="nav-link">← Back to Josh</a>
+  </header>
+
+  <div class="container">
+    <div class="hero">
+      <h2>Find Commission-Based Sales Reps</h2>
+      <p>Discover independent and commission-only sales professionals in your area</p>
+    </div>
+
+    <div class="search-card">
+      <div class="search-row">
+        <div class="field">
+          <label>Location</label>
+          <input type="text" id="locationInput" placeholder="City, State or ZIP" />
+        </div>
+        <div class="field">
+          <label>Industry (optional)</label>
+          <input type="text" id="industryInput" placeholder="e.g. Software, Insurance, Medical" />
+        </div>
+        <div class="field">
+          <label>Radius</label>
+          <select id="radiusSelect">
+            <option value="10">10 miles</option>
+            <option value="25" selected>25 miles</option>
+            <option value="50">50 miles</option>
+            <option value="100">100 miles</option>
+          </select>
+        </div>
+        <button class="btn-search" id="searchBtn" onclick="search()">Search</button>
+      </div>
+    </div>
+
+    <div id="errorMsg" class="error-msg" style="display:none;"></div>
+
+    <div class="status-bar">
+      <div class="spinner" id="spinner"></div>
+      <span id="statusText"></span>
+    </div>
+
+    <div id="results" class="results-grid"></div>
+
+    <div class="tips">
+      <h3>Tips for Hiring Commission Reps</h3>
+      <ul>
+        <li>Look for reps with existing relationships in your target market</li>
+        <li>Commission-only reps are self-motivated — they only earn when you earn</li>
+        <li>Set clear commission structure (% of sale, recurring, tiered) upfront</li>
+        <li>Provide strong sales materials — good reps need good tools</li>
+        <li>Consider a draw against commission to attract top talent initially</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const locationInput = document.getElementById('locationInput');
+    const industryInput = document.getElementById('industryInput');
+    const radiusSelect  = document.getElementById('radiusSelect');
+    const searchBtn     = document.getElementById('searchBtn');
+    const spinner       = document.getElementById('spinner');
+    const statusText    = document.getElementById('statusText');
+    const resultsDiv    = document.getElementById('results');
+    const errorMsg      = document.getElementById('errorMsg');
+
+    locationInput.addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
+    industryInput.addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
+
+    function setStatus(msg, loading = false) {
+      statusText.textContent = msg;
+      spinner.classList.toggle('active', loading);
+    }
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.style.display = 'block';
+    }
+
+    function clearError() {
+      errorMsg.style.display = 'none';
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const d = new Date(dateStr);
+        const now = new Date();
+        const diff = Math.floor((now - d) / 86400000);
+        if (diff === 0) return 'Today';
+        if (diff === 1) return 'Yesterday';
+        if (diff < 7) return `${diff} days ago`;
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } catch { return ''; }
+    }
+
+    function renderResults(data) {
+      resultsDiv.innerHTML = '';
+
+      if (!data.results || data.results.length === 0) {
+        resultsDiv.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">🔍</div>
+            <p>No commission sales rep listings found in <strong>${data.location}</strong>.</p>
+            <p style="margin-top:8px;font-size:13px;">Try a broader location or different industry.</p>
+          </div>`;
+        return;
+      }
+
+      setStatus('', false);
+      const countBadge = `<span class="badge badge-green">${data.count} found</span>`;
+      const locBadge   = `<span class="badge badge-blue">📍 ${data.location}</span>`;
+      statusText.innerHTML = `${countBadge} ${locBadge} commission-based sales rep listings`;
+
+      data.results.forEach(rep => {
+        const card = document.createElement('a');
+        card.className = 'rep-card';
+        card.href = rep.url || '#';
+        card.target = '_blank';
+        card.rel = 'noopener noreferrer';
+
+        const dateStr = formatDate(rep.date);
+        card.innerHTML = `
+          <div class="rep-card-top">
+            <div class="rep-title">${escHtml(rep.title)}</div>
+            <span class="source-tag">${escHtml(rep.source)}${dateStr ? ' · ' + dateStr : ''}</span>
+          </div>
+          <div class="rep-meta">
+            ${rep.company !== 'Not listed' ? `<span class="company">🏢 ${escHtml(rep.company)}</span>` : ''}
+            <span>📍 ${escHtml(rep.location)}</span>
+          </div>
+          <div class="rep-desc">${escHtml(rep.description)}</div>
+        `;
+        resultsDiv.appendChild(card);
+      });
+    }
+
+    function escHtml(str) {
+      return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    async function search() {
+      const location = locationInput.value.trim();
+      if (!location) {
+        locationInput.focus();
+        showError('Please enter a location to search.');
+        return;
+      }
+
+      clearError();
+      resultsDiv.innerHTML = '';
+      searchBtn.disabled = true;
+      setStatus('Searching for commission sales reps…', true);
+
+      const params = new URLSearchParams({
+        location,
+        industry: industryInput.value.trim(),
+        radius: radiusSelect.value,
+      });
+
+      try {
+        const resp = await fetch(`/api/find-reps?${params}`);
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          showError(data.error || 'Search failed. Please try again.');
+          setStatus('');
+        } else {
+          renderResults(data);
+        }
+      } catch (e) {
+        showError('Network error — please check your connection and try again.');
+        setStatus('');
+      } finally {
+        searchBtn.disabled = false;
+        spinner.classList.remove('active');
+      }
+    }
+
+    // Auto-fill from URL params if present
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('location')) {
+      locationInput.value = urlParams.get('location');
+      if (urlParams.get('industry')) industryInput.value = urlParams.get('industry');
+      search();
+    }
+  </script>
+</body>
+</html>
