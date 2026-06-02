@@ -8,6 +8,8 @@ import json
 import base64
 import time
 import re
+import xml.etree.ElementTree as ET
+import urllib.parse
 from typing import Optional
 
 from flask import Flask, request, Response
@@ -1077,6 +1079,96 @@ def api_finder_status():
         "log": _finder_status["log"][-30:],
         "result": _finder_status["result"],
     })
+
+
+# ── Sales Rep Finder ──────────────────────────────────────────────────────────
+
+@app.route("/rep-finder")
+def rep_finder():
+    return render_template("rep_finder.html")
+
+
+@app.route("/api/find-reps")
+def api_find_reps():
+    import requests as req
+    location = request.args.get("location", "").strip()
+    industry = request.args.get("industry", "").strip()
+    radius = request.args.get("radius", "25")
+
+    if not location:
+        return jsonify({"error": "Location is required"}), 400
+
+    results = []
+    queries = [
+        f"commission sales representative {industry}".strip(),
+        f"1099 independent sales rep {industry}".strip(),
+        f"outside sales commission only {industry}".strip(),
+    ]
+
+    seen_titles = set()
+    for query in queries:
+        try:
+            encoded_q = urllib.parse.quote(query)
+            encoded_l = urllib.parse.quote(location)
+            url = (
+                f"https://www.indeed.com/rss"
+                f"?q={encoded_q}&l={encoded_l}&radius={radius}&sort=date"
+            )
+            headers = {
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/120.0.0.0 Safari/537.36"
+                )
+            }
+            resp = req.get(url, headers=headers, timeout=8)
+            if resp.status_code != 200:
+                continue
+
+            root = ET.fromstring(resp.content)
+            ns = {"dc": "http://purl.org/dc/elements/1.1/"}
+
+            for item in root.findall(".//item"):
+                title = item.findtext("title", "").strip()
+                if title in seen_titles:
+                    continue
+                seen_titles.add(title)
+
+                link = item.findtext("link", "").strip()
+                desc_raw = item.findtext("description", "")
+                desc = re.sub(r"<[^>]+>", " ", desc_raw).strip()
+                desc = re.sub(r"\s+", " ", desc)[:400]
+
+                pub_date = item.findtext("pubDate", "")
+                company = item.findtext("dc:name", "", ns).strip() or "Not listed"
+                location_text = item.findtext("dc:location", "", ns).strip() or location
+
+                results.append({
+                    "title": title,
+                    "company": company,
+                    "location": location_text,
+                    "description": desc,
+                    "url": link,
+                    "date": pub_date,
+                    "source": "Indeed",
+                })
+
+                if len(results) >= 30:
+                    break
+        except Exception:
+            continue
+
+        if len(results) >= 30:
+            break
+
+    seen_urls = set()
+    unique = []
+    for r in results:
+        if r["url"] not in seen_urls:
+            seen_urls.add(r["url"])
+            unique.append(r)
+
+    return jsonify({"results": unique, "count": len(unique), "location": location})
 
 
 if __name__ == "__main__":
