@@ -4,3 +4,9 @@ __pycache__/
 *.pyc
 static/audio/
 .DS_Store
+
+# Instagram bot — never commit these
+ig_creds.json
+ig_session.json
+dm_log.csv
+dm_counter.json

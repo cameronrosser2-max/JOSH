@@ -3,20 +3,20 @@
 Josh — Instagram DM Outreach Automation
 Finds HVAC, plumbing, electrical, and other trade businesses on Instagram
 and sends personalized cold DMs selling website services.
-
-QUICK SETUP — only change this section:
 """
 
-# ─────────────────── YOUR SETTINGS (edit these) ────────────────────────────
+# ─────────── OPTIONAL OVERRIDES (leave blank to use saved credentials) ──────
+# You can also just run the script — it will ask you on first launch.
 
-IG_USERNAME   = "your_instagram_username"   # your IG login
-IG_PASSWORD   = "your_instagram_password"   # your IG password
+IG_USERNAME   = ""   # leave blank to use saved login
+IG_PASSWORD   = ""   # leave blank to use saved login
 
-DAILY_DM_LIMIT   = 30     # max DMs per day (stay ≤ 40 to avoid bans)
-SESSION_FILE     = "ig_session.json"        # keeps you logged in between runs
-LOG_FILE         = "dm_log.csv"             # tracks every account messaged
-WAIT_MIN_SECS    = 45     # minimum seconds between DMs
-WAIT_MAX_SECS    = 120    # maximum seconds between DMs
+DAILY_DM_LIMIT   = 30     # max DMs per day (keep ≤ 40 to avoid bans)
+SESSION_FILE     = "ig_session.json"
+LOG_FILE         = "dm_log.csv"
+CREDS_FILE       = "ig_creds.json"
+WAIT_MIN_SECS    = 45
+WAIT_MAX_SECS    = 120
 
 # Hashtags to scrape per industry — add/remove as needed
 HASHTAGS = {
@@ -131,22 +131,56 @@ def log_contact(username: str, full_name: str, industry: str, message: str, stat
         })
 
 
+# ── First-run wizard ──────────────────────────────────────────────────────
+
+def get_credentials() -> tuple[str, str]:
+    """Return (username, password) — from code, saved file, or interactive prompt."""
+    # 1. Hard-coded in the script
+    if IG_USERNAME and IG_PASSWORD:
+        return IG_USERNAME, IG_PASSWORD
+
+    # 2. Previously saved
+    if Path(CREDS_FILE).exists():
+        creds = json.loads(Path(CREDS_FILE).read_text())
+        return creds["username"], creds["password"]
+
+    # 3. First-run wizard
+    print("\n" + "="*50)
+    print("  JOSH — First Time Setup")
+    print("="*50)
+    print("\nEnter your Instagram login details.")
+    print("(These are saved locally so you won't be asked again.)\n")
+
+    username = input("  Instagram username: ").strip()
+    import getpass
+    password = getpass.getpass("  Instagram password: ").strip()
+
+    save = input("\n  Save credentials for future runs? (y/n): ").strip().lower()
+    if save == "y":
+        Path(CREDS_FILE).write_text(json.dumps({"username": username, "password": password}))
+        print("  Saved to ig_creds.json\n")
+
+    return username, password
+
+
 # ── Instagram client helpers ───────────────────────────────────────────────
 
 def get_client() -> Client:
+    username, password = get_credentials()
+
     cl = Client()
-    cl.delay_range = [2, 5]   # instagrapi built-in request spacing
+    cl.delay_range = [2, 5]
 
     if Path(SESSION_FILE).exists():
         try:
             cl.load_settings(SESSION_FILE)
-            cl.login(IG_USERNAME, IG_PASSWORD)
+            cl.login(username, password)
             log.info("Resumed existing session.")
             return cl
         except Exception:
             log.warning("Session invalid — logging in fresh.")
 
-    cl.login(IG_USERNAME, IG_PASSWORD)
+    cl.login(username, password)
     cl.dump_settings(SESSION_FILE)
     log.info("Logged in and session saved.")
     return cl
