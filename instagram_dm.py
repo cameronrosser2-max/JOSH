@@ -11,14 +11,13 @@ and sends personalized cold DMs selling website services.
 IG_USERNAME   = ""   # leave blank to use saved login
 IG_PASSWORD   = ""   # leave blank to use saved login
 
-DAILY_DM_LIMIT   = 30     # max DMs per day (keep ≤ 40 to avoid bans)
+DAILY_DM_LIMIT   = 30
 SESSION_FILE     = "ig_session.json"
 LOG_FILE         = "dm_log.csv"
 CREDS_FILE       = "ig_creds.json"
 WAIT_MIN_SECS    = 45
 WAIT_MAX_SECS    = 120
 
-# Hashtags to scrape per industry — add/remove as needed
 HASHTAGS = {
     "hvac":            ["hvaclife", "hvactechnician", "hvacbusiness", "hvaccontractor", "heatingandcooling"],
     "plumbing":        ["plumbinglife", "plumber", "plumbingbusiness", "plumbingcontractor"],
@@ -45,16 +44,14 @@ import csv
 import json
 import os
 import random
+import sys
 import time
 import logging
 from datetime import date, datetime
 from pathlib import Path
 
 from instagrapi import Client
-from instagrapi.exceptions import (
-    LoginRequired, RateLimitError, ClientError, UserNotFound
-)
-
+from instagrapi.exceptions import LoginRequired, RateLimitError, ClientError, UserNotFound
 from industries import INDUSTRIES, detect_industry, get_industry_context
 
 logging.basicConfig(
@@ -64,8 +61,10 @@ logging.basicConfig(
 )
 log = logging.getLogger("josh.ig")
 
+IN_CI = os.environ.get("CI") == "true"   # True when running in GitHub Actions
 
-# ── Message templates ─────────────────────────────────────────────────────
+
+# ── Message templates ────────────────────────────────────────────────────
 
 def build_message(industry_key: str, business_name: str) -> str:
     ind     = INDUSTRIES.get(industry_key, {})
@@ -97,7 +96,7 @@ def build_message(industry_key: str, business_name: str) -> str:
     return random.choice(templates)
 
 
-# ── CSV log helpers ────────────────────────────────────────────────────────
+# ── CSV log helpers ─────────────────────────────────────────────────────
 
 def load_contacted() -> set:
     contacted = set()
@@ -113,8 +112,7 @@ def log_contact(username: str, full_name: str, industry: str, message: str, stat
     file_exists = Path(LOG_FILE).exists()
     with open(LOG_FILE, "a", newline="") as f:
         writer = csv.DictWriter(
-            f,
-            fieldnames=["date", "username", "full_name", "industry", "status", "message"],
+            f, fieldnames=["date", "username", "full_name", "industry", "status", "message"],
         )
         if not file_exists:
             writer.writeheader()
@@ -128,25 +126,39 @@ def log_contact(username: str, full_name: str, industry: str, message: str, stat
         })
 
 
-# ── Credentials ────────────────────────────────────────────────────────────
+# ── Credentials ──────────────────────────────────────────────────────────
 
 def get_credentials() -> tuple[str, str]:
-    # 1. Environment variables (GitHub Actions)
-    env_user = os.environ.get("IG_USERNAME", "")
-    env_pass = os.environ.get("IG_PASSWORD", "")
+    # 1. Environment variables (GitHub Actions secrets)
+    env_user = os.environ.get("IG_USERNAME", "").strip()
+    env_pass = os.environ.get("IG_PASSWORD", "").strip()
     if env_user and env_pass:
+        log.info("Using credentials from environment variables.")
         return env_user, env_pass
 
-    # 2. Hard-coded overrides
+    # 2. Hard-coded overrides at top of file
     if IG_USERNAME and IG_PASSWORD:
         return IG_USERNAME, IG_PASSWORD
 
     # 3. Previously saved locally
     if Path(CREDS_FILE).exists():
         creds = json.loads(Path(CREDS_FILE).read_text())
-        return creds["username"], creds["password"]
+        u, p = creds.get("username", ""), creds.get("password", "")
+        if u and p:
+            return u, p
 
-    # 4. First-run interactive wizard
+    # 4. If running in GitHub Actions and no credentials found, exit clearly
+    if IN_CI:
+        log.error(
+            "\n\nNO CREDENTIALS FOUND.\n"
+            "Go to your repo → Settings → Secrets and variables → Actions\n"
+            "and add two secrets named exactly:\n"
+            "  IG_USERNAME  → your Instagram username\n"
+            "  IG_PASSWORD  → your Instagram password\n"
+        )
+        sys.exit(1)
+
+    # 5. Interactive wizard (local use only)
     print("\n" + "="*50)
     print("  JOSH — First Time Setup")
     print("="*50)
@@ -165,7 +177,7 @@ def get_credentials() -> tuple[str, str]:
     return username, password
 
 
-# ── Instagram client ───────────────────────────────────────────────────────
+# ── Instagram client ─────────────────────────────────────────────────────
 
 def get_client() -> Client:
     username, password = get_credentials()
@@ -229,7 +241,7 @@ def send_dm(cl: Client, user_id: int, message: str) -> bool:
         return False
 
 
-# ── Main loop ─────────────────────────────────────────────────────────────
+# ── Main loop ────────────────────────────────────────────────────────────
 
 def run():
     log.info("Josh Instagram DM Outreach starting…")
@@ -267,7 +279,10 @@ def run():
             if uname in contacted:
                 continue
 
-            message = build_message(industry_key, acct["full_name"].split()[0] if acct["full_name"] else uname)
+            message = build_message(
+                industry_key,
+                acct["full_name"].split()[0] if acct["full_name"] else uname
+            )
 
             log.info(f"  → DM to @{uname} ({industry_key})")
             success = send_dm(cl, acct["user_id"], message)

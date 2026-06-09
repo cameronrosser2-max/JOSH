@@ -17,6 +17,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check secrets are set
+        run: |
+          if [ -z "${{ secrets.IG_USERNAME }}" ]; then
+            echo "ERROR: IG_USERNAME secret is not set."
+            echo "Go to: repo Settings -> Secrets and variables -> Actions"
+            echo "Add a secret named exactly: IG_USERNAME"
+            exit 1
+          fi
+          if [ -z "${{ secrets.IG_PASSWORD }}" ]; then
+            echo "ERROR: IG_PASSWORD secret is not set."
+            echo "Go to: repo Settings -> Secrets and variables -> Actions"
+            echo "Add a secret named exactly: IG_PASSWORD"
+            exit 1
+          fi
+          echo "Secrets verified."
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
