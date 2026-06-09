@@ -2,38 +2,22 @@ name: Josh Daily DM Outreach
 
 on:
   schedule:
-    - cron: "0 14 * * *"   # every day at 9 AM Eastern (2 PM UTC)
-  workflow_dispatch:         # manual trigger from GitHub
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   send-dms:
     runs-on: ubuntu-latest
     timeout-minutes: 120
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Check secrets are set
-        env:
-          IG_USERNAME: ${{ secrets.IG_USERNAME }}
-          IG_PASSWORD: ${{ secrets.IG_PASSWORD }}
-        run: |
-          if [ -z "$IG_USERNAME" ]; then
-            echo "ERROR: IG_USERNAME secret is not set."
-            echo "Go to: repo Settings -> Secrets and variables -> Actions"
-            echo "Add a secret named exactly: IG_USERNAME"
-            exit 1
-          fi
-          if [ -z "$IG_PASSWORD" ]; then
-            echo "ERROR: IG_PASSWORD secret is not set."
-            echo "Go to: repo Settings -> Secrets and variables -> Actions"
-            echo "Add a secret named exactly: IG_PASSWORD"
-            exit 1
-          fi
-          echo "Secrets verified OK."
+        with:
+          ref: main
 
       - name: Set up Python
         uses: actions/setup-python@v5
