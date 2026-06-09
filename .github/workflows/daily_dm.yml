@@ -1,0 +1,60 @@
+name: Josh Daily DM Outreach
+
+on:
+  schedule:
+    - cron: "0 14 * * *"   # runs every day at 9 AM Eastern (2 PM UTC)
+  workflow_dispatch:         # lets you trigger it manually from GitHub too
+
+jobs:
+  send-dms:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Restore saved Instagram session + contact log from previous run
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ig_session.json
+            dm_log.csv
+            dm_counter.json
+          key: josh-ig-data-${{ runner.os }}
+          restore-keys: josh-ig-data-
+
+      - name: Run DM bot
+        env:
+          IG_USERNAME: ${{ secrets.IG_USERNAME }}
+          IG_PASSWORD: ${{ secrets.IG_PASSWORD }}
+        run: python instagram_dm.py
+
+      # Save session + logs so the next run picks up where this one left off
+      - name: Save cache
+        if: always()
+        uses: actions/cache@v4
+        with:
+          path: |
+            ig_session.json
+            dm_log.csv
+            dm_counter.json
+          key: josh-ig-data-${{ runner.os }}
+
+      # Upload the contact log so you can download it from GitHub
+      - name: Upload contact log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dm-log-${{ github.run_number }}
+          path: dm_log.csv
+          retention-days: 90

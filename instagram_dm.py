@@ -134,17 +134,23 @@ def log_contact(username: str, full_name: str, industry: str, message: str, stat
 # ── First-run wizard ──────────────────────────────────────────────────────
 
 def get_credentials() -> tuple[str, str]:
-    """Return (username, password) — from code, saved file, or interactive prompt."""
-    # 1. Hard-coded in the script
+    """Return (username, password) — from env vars, code, saved file, or interactive prompt."""
+    # 1. Environment variables (used by GitHub Actions)
+    env_user = os.environ.get("IG_USERNAME", "")
+    env_pass = os.environ.get("IG_PASSWORD", "")
+    if env_user and env_pass:
+        return env_user, env_pass
+
+    # 2. Hard-coded in the script
     if IG_USERNAME and IG_PASSWORD:
         return IG_USERNAME, IG_PASSWORD
 
-    # 2. Previously saved
+    # 3. Previously saved locally
     if Path(CREDS_FILE).exists():
         creds = json.loads(Path(CREDS_FILE).read_text())
         return creds["username"], creds["password"]
 
-    # 3. First-run wizard
+    # 4. First-run wizard (local only)
     print("\n" + "="*50)
     print("  JOSH — First Time Setup")
     print("="*50)
