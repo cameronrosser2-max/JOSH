@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JC Marketing Agency — Results-Driven Growth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend+Mega:wght@400;700;900&family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            heading: ['Lexend Mega', 'sans-serif'],
+            body: ['Public Sans', 'sans-serif'],
+          },
+          colors: {
+            primary: '#EC4899',
+            secondary: '#F472B6',
+            accent: '#06B6D4',
+            bg: '#FDF2F8',
+            dark: '#831843',
+          },
+          animation: {
+            'fade-up': 'fadeUp 0.6s ease forwards',
+            'fade-in': 'fadeIn 0.5s ease forwards',
+            'float': 'float 4s ease-in-out infinite',
+            'pulse-slow': 'pulse 3s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeUp: {
+              '0%': { opacity: '0', transform: 'translateY(30px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-12px)' },
+            },
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Public Sans', sans-serif;
+      background-color: #FDF2F8;
+      color: #1e1b2e;
+      overflow-x: hidden;
+    }
+
+    .font-heading { font-family: 'Lexend Mega', sans-serif; }
+
+    /* Scroll-reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      * { animation: none !important; transition-duration: 0.01ms !important; }
+    }
+
+    /* Nav */
+    .nav-scrolled {
+      background: rgba(253, 242, 248, 0.95);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 1px 20px rgba(236, 72, 153, 0.12);
+    }
+
+    /* Hero gradient */
+    .hero-gradient {
+      background: linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 40%, #E0F2FE 100%);
+    }
+
+    /* Blob */
+    .blob {
+      border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+      animation: blobMorph 8s ease-in-out infinite;
+    }
+    @keyframes blobMorph {
+      0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+      25% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+      50% { border-radius: 50% 50% 40% 60% / 40% 50% 60% 50%; }
+      75% { border-radius: 40% 60% 50% 50% / 60% 40% 50% 50%; }
+    }
+
+    /* Stat counter */
+    .stat-card {
+      border: 2px solid #EC4899;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 6px 6px 0px #EC4899;
+    }
+
+    /* Service card */
+    .service-card {
+      border: 2px solid transparent;
+      transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: default;
+    }
+    .service-card:hover {
+      border-color: #EC4899;
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(236, 72, 153, 0.15);
+    }
+
+    /* CTA button */
+    .btn-primary {
+      background: #EC4899;
+      color: white;
+      font-family: 'Lexend Mega', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      border: 2px solid #EC4899;
+      transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+      cursor: pointer;
+    }
+    .btn-primary:hover {
+      background: #831843;
+      border-color: #831843;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(236, 72, 153, 0.35);
+    }
+    .btn-primary:focus-visible {
+      outline: 3px solid #06B6D4;
+      outline-offset: 3px;
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: #EC4899;
+      font-family: 'Lexend Mega', sans-serif;
+      font-weight: 700;
+      border: 2px solid #EC4899;
+      transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+      cursor: pointer;
+    }
+    .btn-outline:hover {
+      background: #EC4899;
+      color: white;
+      transform: translateY(-2px);
+    }
+    .btn-outline:focus-visible {
+      outline: 3px solid #06B6D4;
+      outline-offset: 3px;
+    }
+
+    /* Testimonial */
+    .testimonial-card {
+      border-left: 4px solid #EC4899;
+      transition: transform 0.3s ease;
+    }
+    .testimonial-card:hover { transform: translateX(4px); }
+
+    /* Process step */
+    .process-line::after {
+      content: '';
+      position: absolute;
+      top: 24px;
+      left: calc(100% + 8px);
+      width: calc(100% - 16px);
+      height: 2px;
+      background: linear-gradient(90deg, #EC4899, #06B6D4);
+    }
+
+    /* Marquee */
+    .marquee-track {
+      display: flex;
+      gap: 3rem;
+      animation: marquee 25s linear infinite;
+      white-space: nowrap;
+    }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* Form */
+    .form-input {
+      border: 2px solid #F9A8D4;
+      background: white;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      font-family: 'Public Sans', sans-serif;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: #EC4899;
+      box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
+    }
+
+    /* Mobile nav */
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: flex; }
+  </style>
+</head>
+<body>
+
+  <!-- ========== NAVBAR ========== -->
+  <nav id="navbar" class="fixed top-4 left-4 right-4 z-50 rounded-2xl transition-all duration-300" role="navigation" aria-label="Main navigation">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#home" class="font-heading text-2xl font-black text-dark tracking-tight" aria-label="JC Marketing Agency home">
+        JC<span class="text-primary">.</span>
+      </a>
+
+      <!-- Desktop Nav -->
+      <ul class="hidden md:flex items-center gap-8 list-none m-0 p-0" role="list">
+        <li><a href="#services" class="font-body font-600 text-sm text-gray-700 hover:text-primary transition-colors duration-200 cursor-pointer">Services</a></li>
+        <li><a href="#results" class="font-body font-600 text-sm text-gray-700 hover:text-primary transition-colors duration-200 cursor-pointer">Results</a></li>
+        <li><a href="#process" class="font-body font-600 text-sm text-gray-700 hover:text-primary transition-colors duration-200 cursor-pointer">Process</a></li>
+        <li><a href="#testimonials" class="font-body font-600 text-sm text-gray-700 hover:text-primary transition-colors duration-200 cursor-pointer">Clients</a></li>
+      </ul>
+
+      <a href="#contact" class="hidden md:inline-flex btn-primary px-5 py-2.5 rounded-xl text-sm">
+        Get a Free Audit
+      </a>
+
+      <!-- Mobile hamburger -->
+      <button id="hamburger" class="md:hidden p-2 rounded-lg text-dark hover:text-primary transition-colors cursor-pointer" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path id="ham-open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          <path id="ham-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="flex-col gap-2 px-6 pb-5 md:hidden" role="menu">
+      <a href="#services" class="block py-2.5 font-body text-gray-700 hover:text-primary transition-colors cursor-pointer" role="menuitem">Services</a>
+      <a href="#results" class="block py-2.5 font-body text-gray-700 hover:text-primary transition-colors cursor-pointer" role="menuitem">Results</a>
+      <a href="#process" class="block py-2.5 font-body text-gray-700 hover:text-primary transition-colors cursor-pointer" role="menuitem">Process</a>
+      <a href="#testimonials" class="block py-2.5 font-body text-gray-700 hover:text-primary transition-colors cursor-pointer" role="menuitem">Clients</a>
+      <a href="#contact" class="btn-primary inline-flex mt-2 px-5 py-3 rounded-xl text-sm w-full justify-center" role="menuitem">Get a Free Audit</a>
+    </div>
+  </nav>
+
+  <!-- ========== HERO ========== -->
+  <section id="home" class="hero-gradient min-h-screen flex items-center pt-28 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden" aria-labelledby="hero-heading">
+    <div class="max-w-7xl mx-auto w-full">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+
+        <!-- Left copy -->
+        <div>
+          <!-- Badge -->
+          <div class="reveal inline-flex items-center gap-2 bg-white border-2 border-primary/30 rounded-full px-4 py-1.5 mb-6">
+            <span class="w-2 h-2 rounded-full bg-primary animate-pulse-slow" aria-hidden="true"></span>
+            <span class="font-body text-sm font-semibold text-dark">Trusted by 120+ Growing Brands</span>
+          </div>
+
+          <h1 id="hero-heading" class="reveal reveal-delay-1 font-heading text-4xl sm:text-5xl lg:text-6xl font-black text-dark leading-tight tracking-tight mb-6">
+            Marketing That<br />
+            <span class="text-primary">Actually</span><br />
+            Delivers Results
+          </h1>
+
+          <p class="reveal reveal-delay-2 font-body text-lg text-gray-600 leading-relaxed mb-8 max-w-lg">
+            JC Marketing Agency turns clicks into customers. Data-driven strategies, bold creative, and measurable ROI — no fluff, just growth.
+          </p>
+
+          <div class="reveal reveal-delay-3 flex flex-col sm:flex-row gap-4">
+            <a href="#contact" class="btn-primary px-8 py-4 rounded-xl text-base inline-flex items-center justify-center gap-2">
+              Start Growing Today
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+              </svg>
+            </a>
+            <a href="#results" class="btn-outline px-8 py-4 rounded-xl text-base inline-flex items-center justify-center gap-2">
+              See Our Work
+            </a>
+          </div>
+
+          <!-- Trust bar -->
+          <div class="reveal reveal-delay-4 flex items-center gap-4 mt-10">
+            <div class="flex -space-x-2" aria-label="Client avatars">
+              <div class="w-9 h-9 rounded-full bg-primary border-2 border-white flex items-center justify-center text-white text-xs font-bold">A</div>
+              <div class="w-9 h-9 rounded-full bg-accent border-2 border-white flex items-center justify-center text-white text-xs font-bold">B</div>
+              <div class="w-9 h-9 rounded-full bg-dark border-2 border-white flex items-center justify-center text-white text-xs font-bold">C</div>
+              <div class="w-9 h-9 rounded-full bg-secondary border-2 border-white flex items-center justify-center text-dark text-xs font-bold">+</div>
+            </div>
+            <div>
+              <div class="flex gap-0.5" aria-label="5 star rating">
+                <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+              </div>
+              <p class="font-body text-xs text-gray-500 mt-0.5">4.9/5 from 200+ reviews</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right visual -->
+        <div class="relative flex items-center justify-center" aria-hidden="true">
+          <!-- Blob background -->
+          <div class="blob absolute w-80 h-80 bg-primary/10 -z-0"></div>
+
+          <!-- Main card -->
+          <div class="relative z-10 bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm border-2 border-primary/10 animate-[float_4s_ease-in-out_infinite]">
+            <div class="flex items-center justify-between mb-6">
+              <span class="font-heading text-sm font-black text-dark">Campaign ROI</span>
+              <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">+247%</span>
+            </div>
+
+            <!-- Bar chart visual -->
+            <div class="flex items-end gap-3 h-28 mb-4" role="img" aria-label="Bar chart showing campaign performance growth">
+              <div class="flex-1 bg-gray-100 rounded-t-lg" style="height: 35%"></div>
+              <div class="flex-1 bg-primary/30 rounded-t-lg" style="height: 50%"></div>
+              <div class="flex-1 bg-primary/50 rounded-t-lg" style="height: 65%"></div>
+              <div class="flex-1 bg-primary/70 rounded-t-lg" style="height: 80%"></div>
+              <div class="flex-1 bg-primary rounded-t-lg" style="height: 100%"></div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-400 font-body mb-6">
+              <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span>
+            </div>
+
+            <!-- Mini stat -->
+            <div class="flex items-center gap-3 bg-bg rounded-xl p-3">
+              <div class="w-8 h-8 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-heading text-xs font-black text-dark">Revenue up $128K</p>
+                <p class="font-body text-xs text-gray-500">This quarter vs last</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating badge -->
+          <div class="absolute -bottom-4 -left-4 bg-white rounded-2xl shadow-lg p-3 border-2 border-primary/20 flex items-center gap-2 z-20">
+            <div class="w-8 h-8 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+            </div>
+            <div>
+              <p class="font-heading text-xs font-black text-dark">+1,240 Leads</p>
+              <p class="font-body text-xs text-gray-400">Last 30 days</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== MARQUEE / CLIENT LOGOS ========== -->
+  <section class="py-10 bg-white border-y-2 border-primary/10 overflow-hidden" aria-label="Client brands">
+    <div class="relative">
+      <div class="marquee-track" aria-hidden="true">
+        <!-- Repeated for seamless loop -->
+        <span class="font-heading text-2xl font-black text-gray-200">TECHWAVE</span>
+        <span class="text-primary font-black text-xl">✦</span>
+        <span class="font-heading text-2xl font-black text-gray-200">NOVA BRAND</span>
+        <span class="text-primary font-black text-xl">✦</span>
+        <span class="font-heading text-2xl font-black text-gray-200">APEX CO</span>
+        <span class="text-primary font-black text-xl">✦</span>
+        <span class="font-heading text-2xl font-black text-gray-200">LUMINARY</span>
+        <span class="text-primary font-black text-xl">✦</span>
+        <span class="font-heading text-2xl font-black text-gray-200">STRIDE INC</span>
+        <span class="text-primary font-black text-xl">✦</span>
+        <span class="font-heading text-2xl font-black text-gray-200">ZENITH HQ</span>
+        <span class="text-primary font-black text-xl">✦</span>
+        <!-- Duplicate for loop -->
+        <span class="font-heading text-2xl font-black text-gray-200">TECHWAVE</span>
+        <span class="text-primary font-black text-xl">✦</span>
+        <span class="font-heading text-2xl font-black text-gray-200">NOVA BRAND</span>
+        <span class="text-primary font-black text-xl">✦</span>
+        <span class="font-heading text-2xl font-black text-gray-200">APEX CO</span>
+        <span class="text-primary font-black text-xl">✦</span>
+        <span class="font-heading text-2xl font-black text-gray-200">LUMINARY</span>
+        <span class="text-primary font-black text-xl">✦</span>
+        <span class="font-heading text-2xl font-black text-gray-200">STRIDE INC</span>
+        <span class="text-primary font-black text-xl">✦</span>
+        <span class="font-heading text-2xl font-black text-gray-200">ZENITH HQ</span>
+        <span class="text-primary font-black text-xl">✦</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== STATS ========== -->
+  <section id="results" class="py-20 px-4 sm:px-6 lg:px-8 bg-bg" aria-labelledby="stats-heading">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <p class="reveal font-body text-sm font-semibold text-primary uppercase tracking-widest mb-3">By The Numbers</p>
+        <h2 id="stats-heading" class="reveal reveal-delay-1 font-heading text-3xl sm:text-4xl font-black text-dark">Results We're Proud Of</h2>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="reveal stat-card bg-white rounded-2xl p-6 text-center">
+          <p class="font-heading text-4xl font-black text-primary mb-1">$24M+</p>
+          <p class="font-body text-sm text-gray-500">Revenue Generated</p>
+        </div>
+        <div class="reveal reveal-delay-1 stat-card bg-white rounded-2xl p-6 text-center">
+          <p class="font-heading text-4xl font-black text-primary mb-1">120+</p>
+          <p class="font-body text-sm text-gray-500">Brands Scaled</p>
+        </div>
+        <div class="reveal reveal-delay-2 stat-card bg-white rounded-2xl p-6 text-center">
+          <p class="font-heading text-4xl font-black text-primary mb-1">340%</p>
+          <p class="font-body text-sm text-gray-500">Avg. ROI Increase</p>
+        </div>
+        <div class="reveal reveal-delay-3 stat-card bg-white rounded-2xl p-6 text-center">
+          <p class="font-heading text-4xl font-black text-primary mb-1">98%</p>
+          <p class="font-body text-sm text-gray-500">Client Retention</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SERVICES ========== -->
+  <section id="services" class="py-20 px-4 sm:px-6 lg:px-8 bg-white" aria-labelledby="services-heading">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-14">
+        <p class="reveal font-body text-sm font-semibold text-primary uppercase tracking-widest mb-3">What We Do</p>
+        <h2 id="services-heading" class="reveal reveal-delay-1 font-heading text-3xl sm:text-4xl font-black text-dark mb-4">Services Built for Growth</h2>
+        <p class="reveal reveal-delay-2 font-body text-gray-500 max-w-xl mx-auto leading-relaxed">
+          From strategy to execution, we offer full-funnel marketing that drives real, measurable results.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Service 1 -->
+        <div class="reveal service-card bg-bg rounded-2xl p-7">
+          <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-5">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <h3 class="font-heading text-lg font-black text-dark mb-3">Paid Advertising</h3>
+          <p class="font-body text-gray-500 text-sm leading-relaxed mb-4">Google, Meta, TikTok — we manage every dollar of your ad spend for maximum returns.</p>
+          <ul class="space-y-1.5" role="list">
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Google Search & Display
+            </li>
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Meta &amp; Instagram Ads
+            </li>
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              TikTok &amp; YouTube
+            </li>
+          </ul>
+        </div>
+
+        <!-- Service 2 -->
+        <div class="reveal reveal-delay-1 service-card bg-bg rounded-2xl p-7">
+          <div class="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-5">
+            <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <h3 class="font-heading text-lg font-black text-dark mb-3">SEO & Content</h3>
+          <p class="font-body text-gray-500 text-sm leading-relaxed mb-4">Dominate search rankings with content that converts, built on data not guesswork.</p>
+          <ul class="space-y-1.5" role="list">
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Technical SEO Audits
+            </li>
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Blog &amp; Landing Pages
+            </li>
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Link Building
+            </li>
+          </ul>
+        </div>
+
+        <!-- Service 3 -->
+        <div class="reveal reveal-delay-2 service-card bg-bg rounded-2xl p-7">
+          <div class="w-12 h-12 bg-dark/10 rounded-xl flex items-center justify-center mb-5">
+            <svg class="w-6 h-6 text-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
+            </svg>
+          </div>
+          <h3 class="font-heading text-lg font-black text-dark mb-3">Social Media</h3>
+          <p class="font-body text-gray-500 text-sm leading-relaxed mb-4">Build a loyal following and turn your social channels into revenue-generating assets.</p>
+          <ul class="space-y-1.5" role="list">
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-dark flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Content Creation &amp; Scheduling
+            </li>
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-dark flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Community Management
+            </li>
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-dark flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Influencer Partnerships
+            </li>
+          </ul>
+        </div>
+
+        <!-- Service 4 -->
+        <div class="reveal service-card bg-bg rounded-2xl p-7">
+          <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-5">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 class="font-heading text-lg font-black text-dark mb-3">Email Marketing</h3>
+          <p class="font-body text-gray-500 text-sm leading-relaxed mb-4">Turn your list into your most profitable channel with sequences that sell.</p>
+          <ul class="space-y-1.5" role="list">
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Automated Flows
+            </li>
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              A/B Testing
+            </li>
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Segmentation Strategy
+            </li>
+          </ul>
+        </div>
+
+        <!-- Service 5 -->
+        <div class="reveal reveal-delay-1 service-card bg-bg rounded-2xl p-7">
+          <div class="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-5">
+            <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+            </svg>
+          </div>
+          <h3 class="font-heading text-lg font-black text-dark mb-3">Web Design & CRO</h3>
+          <p class="font-body text-gray-500 text-sm leading-relaxed mb-4">Websites and landing pages engineered to convert visitors into paying customers.</p>
+          <ul class="space-y-1.5" role="list">
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Landing Page Design
+            </li>
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Funnel Optimization
+            </li>
+            <li class="flex items-center gap-2 font-body text-sm text-gray-600">
+              <svg class="w-4 h-4 text-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Heatmap &amp; Analytics
+            </li>
+          </ul>
+        </div>
+
+        <!-- Service 6 -->
+        <div class="reveal reveal-delay-2 service-card bg-primary rounded-2xl p-7 text-white">
+          <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-5">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <h3 class="font-heading text-lg font-black mb-3">Strategy & Analytics</h3>
+          <p class="text-pink-100 text-sm leading-relaxed mb-4">Full-funnel analytics, competitive intelligence, and quarterly growth plans tailored to your goals.</p>
+          <a href="#contact" class="inline-flex items-center gap-1.5 font-heading text-sm font-black text-white underline underline-offset-4 hover:no-underline transition-all cursor-pointer">
+            Learn More
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+            </svg>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PROCESS ========== -->
+  <section id="process" class="py-20 px-4 sm:px-6 lg:px-8 bg-bg" aria-labelledby="process-heading">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-14">
+        <p class="reveal font-body text-sm font-semibold text-primary uppercase tracking-widest mb-3">How We Work</p>
+        <h2 id="process-heading" class="reveal reveal-delay-1 font-heading text-3xl sm:text-4xl font-black text-dark">From Zero to Growth in 4 Steps</h2>
+      </div>
+
+      <div class="grid md:grid-cols-4 gap-6 relative">
+        <div class="reveal text-center">
+          <div class="w-12 h-12 rounded-xl bg-primary text-white font-heading font-black text-lg flex items-center justify-center mx-auto mb-4">1</div>
+          <h3 class="font-heading text-base font-black text-dark mb-2">Discovery</h3>
+          <p class="font-body text-sm text-gray-500 leading-relaxed">We audit your brand, competitors, and current marketing to find your biggest opportunities.</p>
+        </div>
+        <div class="reveal reveal-delay-1 text-center">
+          <div class="w-12 h-12 rounded-xl bg-primary text-white font-heading font-black text-lg flex items-center justify-center mx-auto mb-4">2</div>
+          <h3 class="font-heading text-base font-black text-dark mb-2">Strategy</h3>
+          <p class="font-body text-sm text-gray-500 leading-relaxed">A custom 90-day growth plan with clear KPIs, budget allocation, and channel mix.</p>
+        </div>
+        <div class="reveal reveal-delay-2 text-center">
+          <div class="w-12 h-12 rounded-xl bg-primary text-white font-heading font-black text-lg flex items-center justify-center mx-auto mb-4">3</div>
+          <h3 class="font-heading text-base font-black text-dark mb-2">Execution</h3>
+          <p class="font-body text-sm text-gray-500 leading-relaxed">Our team launches campaigns, creates content, and optimizes daily for peak performance.</p>
+        </div>
+        <div class="reveal reveal-delay-3 text-center">
+          <div class="w-12 h-12 rounded-xl bg-accent text-white font-heading font-black text-lg flex items-center justify-center mx-auto mb-4">4</div>
+          <h3 class="font-heading text-base font-black text-dark mb-2">Scale</h3>
+          <p class="font-body text-sm text-gray-500 leading-relaxed">We double down on what's working and continuously scale your winning campaigns.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== TESTIMONIALS ========== -->
+  <section id="testimonials" class="py-20 px-4 sm:px-6 lg:px-8 bg-white" aria-labelledby="testimonials-heading">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-14">
+        <p class="reveal font-body text-sm font-semibold text-primary uppercase tracking-widest mb-3">Client Stories</p>
+        <h2 id="testimonials-heading" class="reveal reveal-delay-1 font-heading text-3xl sm:text-4xl font-black text-dark">Don't Take Our Word For It</h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+
+        <blockquote class="reveal testimonial-card bg-bg rounded-2xl p-7">
+          <div class="flex gap-0.5 mb-4" aria-label="5 star rating">
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+          <p class="font-body text-gray-700 leading-relaxed mb-6 text-sm">"JC Marketing 3x'd our online revenue in just 6 months. Their paid ads team is world class. Best investment we've ever made in marketing."</p>
+          <footer class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm" aria-hidden="true">SL</div>
+            <div>
+              <cite class="font-heading text-sm font-black text-dark not-italic">Sarah L.</cite>
+              <p class="font-body text-xs text-gray-400">CEO, TechWave</p>
+            </div>
+          </footer>
+        </blockquote>
+
+        <blockquote class="reveal reveal-delay-1 testimonial-card bg-bg rounded-2xl p-7">
+          <div class="flex gap-0.5 mb-4" aria-label="5 star rating">
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+          <p class="font-body text-gray-700 leading-relaxed mb-6 text-sm">"Our SEO traffic went from 2K to 45K monthly visitors in under a year. The content strategy they built us is a machine."</p>
+          <footer class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white font-bold text-sm" aria-hidden="true">MR</div>
+            <div>
+              <cite class="font-heading text-sm font-black text-dark not-italic">Marcus R.</cite>
+              <p class="font-body text-xs text-gray-400">Founder, Apex Co</p>
+            </div>
+          </footer>
+        </blockquote>
+
+        <blockquote class="reveal reveal-delay-2 testimonial-card bg-bg rounded-2xl p-7">
+          <div class="flex gap-0.5 mb-4" aria-label="5 star rating">
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+          <p class="font-body text-gray-700 leading-relaxed mb-6 text-sm">"They rebuilt our entire email program and we hit $400K in attributed email revenue last quarter. The team is responsive, creative, and genuinely cares."</p>
+          <footer class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-dark flex items-center justify-center text-white font-bold text-sm" aria-hidden="true">JK</div>
+            <div>
+              <cite class="font-heading text-sm font-black text-dark not-italic">Jenna K.</cite>
+              <p class="font-body text-xs text-gray-400">CMO, Luminary Brands</p>
+            </div>
+          </footer>
+        </blockquote>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CTA BANNER ========== -->
+  <section class="py-20 px-4 sm:px-6 lg:px-8 bg-dark" aria-labelledby="cta-heading">
+    <div class="max-w-4xl mx-auto text-center">
+      <p class="reveal font-body text-sm font-semibold text-primary uppercase tracking-widest mb-4">Limited Spots Available</p>
+      <h2 id="cta-heading" class="reveal reveal-delay-1 font-heading text-3xl sm:text-5xl font-black text-white leading-tight mb-6">
+        Ready to <span class="text-primary">10x</span> Your Marketing?
+      </h2>
+      <p class="reveal reveal-delay-2 font-body text-pink-200 text-lg leading-relaxed mb-10 max-w-xl mx-auto">
+        We only take on 5 new clients per month to guarantee results. Book your free audit before the spots fill up.
+      </p>
+      <div class="reveal reveal-delay-3 flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="#contact" class="btn-primary px-10 py-4 rounded-xl text-base inline-flex items-center justify-center gap-2">
+          Book Free Audit
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </a>
+        <a href="tel:+15551234567" class="btn-outline border-white text-white hover:bg-white hover:text-dark px-10 py-4 rounded-xl text-base inline-flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+          </svg>
+          Call Us
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CONTACT ========== -->
+  <section id="contact" class="py-20 px-4 sm:px-6 lg:px-8 bg-bg" aria-labelledby="contact-heading">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+
+        <!-- Left info -->
+        <div>
+          <p class="reveal font-body text-sm font-semibold text-primary uppercase tracking-widest mb-3">Get In Touch</p>
+          <h2 id="contact-heading" class="reveal reveal-delay-1 font-heading text-3xl sm:text-4xl font-black text-dark mb-6">Let's Build Something Great Together</h2>
+          <p class="reveal reveal-delay-2 font-body text-gray-500 leading-relaxed mb-8">
+            Fill out the form and one of our growth strategists will reach out within 24 hours to schedule your free marketing audit.
+          </p>
+
+          <div class="reveal reveal-delay-3 space-y-5">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-body text-xs text-gray-400 mb-0.5">Email</p>
+                <a href="mailto:hello@jcmarketing.co" class="font-body text-sm font-semibold text-dark hover:text-primary transition-colors">hello@jcmarketing.co</a>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-body text-xs text-gray-400 mb-0.5">Phone</p>
+                <a href="tel:+15551234567" class="font-body text-sm font-semibold text-dark hover:text-primary transition-colors">+1 (555) 123-4567</a>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-body text-xs text-gray-400 mb-0.5">Location</p>
+                <p class="font-body text-sm font-semibold text-dark">New York, NY (Remote-First)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <div class="reveal reveal-delay-1 bg-white rounded-3xl p-8 shadow-xl border-2 border-primary/10">
+          <form id="contact-form" novalidate aria-label="Contact form">
+            <div class="grid sm:grid-cols-2 gap-5 mb-5">
+              <div>
+                <label for="first-name" class="block font-body text-sm font-semibold text-dark mb-2">First Name <span class="text-primary" aria-label="required">*</span></label>
+                <input type="text" id="first-name" name="first-name" required autocomplete="given-name"
+                  class="form-input w-full rounded-xl px-4 py-3 font-body text-sm text-dark placeholder-gray-400"
+                  placeholder="John" />
+              </div>
+              <div>
+                <label for="last-name" class="block font-body text-sm font-semibold text-dark mb-2">Last Name <span class="text-primary" aria-label="required">*</span></label>
+                <input type="text" id="last-name" name="last-name" required autocomplete="family-name"
+                  class="form-input w-full rounded-xl px-4 py-3 font-body text-sm text-dark placeholder-gray-400"
+                  placeholder="Carter" />
+              </div>
+            </div>
+            <div class="mb-5">
+              <label for="email" class="block font-body text-sm font-semibold text-dark mb-2">Work Email <span class="text-primary" aria-label="required">*</span></label>
+              <input type="email" id="email" name="email" required autocomplete="email"
+                class="form-input w-full rounded-xl px-4 py-3 font-body text-sm text-dark placeholder-gray-400"
+                placeholder="john@company.com" />
+            </div>
+            <div class="mb-5">
+              <label for="company" class="block font-body text-sm font-semibold text-dark mb-2">Company</label>
+              <input type="text" id="company" name="company" autocomplete="organization"
+                class="form-input w-full rounded-xl px-4 py-3 font-body text-sm text-dark placeholder-gray-400"
+                placeholder="Acme Inc." />
+            </div>
+            <div class="mb-5">
+              <label for="service" class="block font-body text-sm font-semibold text-dark mb-2">I'm interested in</label>
+              <select id="service" name="service"
+                class="form-input w-full rounded-xl px-4 py-3 font-body text-sm text-dark cursor-pointer">
+                <option value="">Select a service...</option>
+                <option value="paid-ads">Paid Advertising</option>
+                <option value="seo">SEO &amp; Content</option>
+                <option value="social">Social Media</option>
+                <option value="email">Email Marketing</option>
+                <option value="web">Web Design &amp; CRO</option>
+                <option value="full">Full-Service Package</option>
+              </select>
+            </div>
+            <div class="mb-7">
+              <label for="message" class="block font-body text-sm font-semibold text-dark mb-2">Tell us about your goals</label>
+              <textarea id="message" name="message" rows="4"
+                class="form-input w-full rounded-xl px-4 py-3 font-body text-sm text-dark placeholder-gray-400 resize-none"
+                placeholder="What are you trying to achieve? Current monthly revenue? Budget?"></textarea>
+            </div>
+            <button type="submit" class="btn-primary w-full py-4 rounded-xl text-base flex items-center justify-center gap-2">
+              Send Message — It's Free
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+              </svg>
+            </button>
+            <p class="font-body text-xs text-gray-400 text-center mt-4">No spam. We'll reply within 24 hours.</p>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="bg-dark py-12 px-4 sm:px-6 lg:px-8" role="contentinfo">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-4 gap-10 mb-10">
+        <div class="md:col-span-2">
+          <a href="#home" class="font-heading text-3xl font-black text-white mb-4 inline-block" aria-label="JC Marketing Agency home">
+            JC<span class="text-primary">.</span>
+          </a>
+          <p class="font-body text-pink-200 text-sm leading-relaxed max-w-xs mt-3">
+            Results-driven marketing for ambitious brands. We grow your business — measurably.
+          </p>
+          <div class="flex gap-3 mt-5">
+            <a href="#" class="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center hover:bg-primary transition-colors cursor-pointer" aria-label="Twitter">
+              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a href="#" class="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center hover:bg-primary transition-colors cursor-pointer" aria-label="LinkedIn">
+              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </a>
+            <a href="#" class="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center hover:bg-primary transition-colors cursor-pointer" aria-label="Instagram">
+              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="font-heading text-sm font-black text-white mb-4">Services</h3>
+          <ul class="space-y-2.5 list-none p-0 m-0" role="list">
+            <li><a href="#services" class="font-body text-sm text-pink-200 hover:text-white transition-colors cursor-pointer">Paid Advertising</a></li>
+            <li><a href="#services" class="font-body text-sm text-pink-200 hover:text-white transition-colors cursor-pointer">SEO &amp; Content</a></li>
+            <li><a href="#services" class="font-body text-sm text-pink-200 hover:text-white transition-colors cursor-pointer">Social Media</a></li>
+            <li><a href="#services" class="font-body text-sm text-pink-200 hover:text-white transition-colors cursor-pointer">Email Marketing</a></li>
+            <li><a href="#services" class="font-body text-sm text-pink-200 hover:text-white transition-colors cursor-pointer">Web Design &amp; CRO</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="font-heading text-sm font-black text-white mb-4">Company</h3>
+          <ul class="space-y-2.5 list-none p-0 m-0" role="list">
+            <li><a href="#results" class="font-body text-sm text-pink-200 hover:text-white transition-colors cursor-pointer">Results</a></li>
+            <li><a href="#process" class="font-body text-sm text-pink-200 hover:text-white transition-colors cursor-pointer">Our Process</a></li>
+            <li><a href="#testimonials" class="font-body text-sm text-pink-200 hover:text-white transition-colors cursor-pointer">Client Stories</a></li>
+            <li><a href="#contact" class="font-body text-sm text-pink-200 hover:text-white transition-colors cursor-pointer">Contact Us</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="font-body text-xs text-pink-300">&copy; 2026 JC Marketing Agency. All rights reserved.</p>
+        <div class="flex gap-5">
+          <a href="#" class="font-body text-xs text-pink-300 hover:text-white transition-colors cursor-pointer">Privacy Policy</a>
+          <a href="#" class="font-body text-xs text-pink-300 hover:text-white transition-colors cursor-pointer">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========== SCRIPTS ========== -->
+  <script>
+    // Scroll-reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Sticky nav styling
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 60) {
+        navbar.classList.add('nav-scrolled');
+      } else {
+        navbar.classList.remove('nav-scrolled');
+      }
+    }, { passive: true });
+
+    // Mobile menu toggle
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const hamOpen = document.getElementById('ham-open');
+    const hamClose = document.getElementById('ham-close');
+
+    hamburger.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      hamOpen.classList.toggle('hidden', isOpen);
+      hamClose.classList.toggle('hidden', !isOpen);
+    });
+
+    // Close mobile menu on nav link click
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        hamOpen.classList.remove('hidden');
+        hamClose.classList.add('hidden');
+      });
+    });
+
+    // Form submit handler
+    document.getElementById('contact-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const btn = this.querySelector('button[type="submit"]');
+      btn.textContent = 'Sent! We\'ll be in touch soon.';
+      btn.disabled = true;
+      btn.style.background = '#10b981';
+      btn.style.borderColor = '#10b981';
+    });
+  </script>
+
+</body>
+</html>
