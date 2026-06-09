@@ -3,20 +3,20 @@
 Josh — Instagram DM Outreach Automation
 Finds HVAC, plumbing, electrical, and other trade businesses on Instagram
 and sends personalized cold DMs selling website services.
-
-QUICK SETUP — only change this section:
 """
 
-# ─────────────────── YOUR SETTINGS (edit these) ────────────────────────────
+# ─────────── OPTIONAL OVERRIDES (leave blank to use saved credentials) ──────
+# You can also just run the script — it will ask you on first launch.
 
-IG_USERNAME   = "your_instagram_username"   # your IG login
-IG_PASSWORD   = "your_instagram_password"   # your IG password
+IG_USERNAME   = ""   # leave blank to use saved login
+IG_PASSWORD   = ""   # leave blank to use saved login
 
-DAILY_DM_LIMIT   = 30     # max DMs per day (stay ≤ 40 to avoid bans)
-SESSION_FILE     = "ig_session.json"        # keeps you logged in between runs
-LOG_FILE         = "dm_log.csv"             # tracks every account messaged
-WAIT_MIN_SECS    = 45     # minimum seconds between DMs
-WAIT_MAX_SECS    = 120    # maximum seconds between DMs
+DAILY_DM_LIMIT   = 30     # max DMs per day (keep ≤ 40 to avoid bans)
+SESSION_FILE     = "ig_session.json"
+LOG_FILE         = "dm_log.csv"
+CREDS_FILE       = "ig_creds.json"
+WAIT_MIN_SECS    = 45
+WAIT_MAX_SECS    = 120
 
 # Hashtags to scrape per industry — add/remove as needed
 HASHTAGS = {
@@ -37,7 +37,6 @@ HASHTAGS = {
     "repair":          ["autorepairshop", "appliancerepair", "repairshop"],
 }
 
-# How many accounts to pull per hashtag (Instagram limits ~50 reliably)
 ACCOUNTS_PER_HASHTAG = 50
 
 # ───────────────────────────────────────────────────────────────────────────
@@ -66,11 +65,10 @@ logging.basicConfig(
 log = logging.getLogger("josh.ig")
 
 
-# ── Message templates ── one is chosen at random per send ─────────────────
+# ── Message templates ─────────────────────────────────────────────────────
 
 def build_message(industry_key: str, business_name: str) -> str:
-    """Return a short, personalized cold DM for the given industry."""
-    ind = INDUSTRIES.get(industry_key, {})
+    ind     = INDUSTRIES.get(industry_key, {})
     name    = ind.get("name", "your business")
     pain    = random.choice(ind.get("pain_points", ["getting found online is tough"]))
     roi     = ind.get("roi_hook", "a website pays for itself fast.")
@@ -102,7 +100,6 @@ def build_message(industry_key: str, business_name: str) -> str:
 # ── CSV log helpers ────────────────────────────────────────────────────────
 
 def load_contacted() -> set:
-    """Return set of usernames already messaged (from log file)."""
     contacted = set()
     if not Path(LOG_FILE).exists():
         return contacted
@@ -131,34 +128,69 @@ def log_contact(username: str, full_name: str, industry: str, message: str, stat
         })
 
 
-# ── Instagram client helpers ───────────────────────────────────────────────
+# ── Credentials ────────────────────────────────────────────────────────────
+
+def get_credentials() -> tuple[str, str]:
+    # 1. Environment variables (GitHub Actions)
+    env_user = os.environ.get("IG_USERNAME", "")
+    env_pass = os.environ.get("IG_PASSWORD", "")
+    if env_user and env_pass:
+        return env_user, env_pass
+
+    # 2. Hard-coded overrides
+    if IG_USERNAME and IG_PASSWORD:
+        return IG_USERNAME, IG_PASSWORD
+
+    # 3. Previously saved locally
+    if Path(CREDS_FILE).exists():
+        creds = json.loads(Path(CREDS_FILE).read_text())
+        return creds["username"], creds["password"]
+
+    # 4. First-run interactive wizard
+    print("\n" + "="*50)
+    print("  JOSH — First Time Setup")
+    print("="*50)
+    print("\nEnter your Instagram login details.")
+    print("(Saved locally so you won't be asked again.)\n")
+
+    username = input("  Instagram username: ").strip()
+    import getpass
+    password = getpass.getpass("  Instagram password: ").strip()
+
+    save = input("\n  Save credentials for future runs? (y/n): ").strip().lower()
+    if save == "y":
+        Path(CREDS_FILE).write_text(json.dumps({"username": username, "password": password}))
+        print("  Saved to ig_creds.json\n")
+
+    return username, password
+
+
+# ── Instagram client ───────────────────────────────────────────────────────
 
 def get_client() -> Client:
+    username, password = get_credentials()
+
     cl = Client()
-    cl.delay_range = [2, 5]   # instagrapi built-in request spacing
+    cl.delay_range = [2, 5]
 
     if Path(SESSION_FILE).exists():
         try:
             cl.load_settings(SESSION_FILE)
-            cl.login(IG_USERNAME, IG_PASSWORD)
+            cl.login(username, password)
             log.info("Resumed existing session.")
             return cl
         except Exception:
             log.warning("Session invalid — logging in fresh.")
 
-    cl.login(IG_USERNAME, IG_PASSWORD)
+    cl.login(username, password)
     cl.dump_settings(SESSION_FILE)
     log.info("Logged in and session saved.")
     return cl
 
 
 def scrape_accounts(cl: Client, industry_key: str) -> list[dict]:
-    """
-    Scrape accounts from hashtags for one industry.
-    Returns list of dicts: {username, full_name, user_id, industry}.
-    """
     tags    = HASHTAGS.get(industry_key, [])
-    results = {}   # username → info dict (deduped)
+    results = {}
 
     for tag in tags:
         try:
@@ -202,11 +234,10 @@ def send_dm(cl: Client, user_id: int, message: str) -> bool:
 def run():
     log.info("Josh Instagram DM Outreach starting…")
 
-    # Guard: don't exceed daily limit across runs
-    today       = date.today().isoformat()
+    today        = date.today().isoformat()
     counter_file = Path("dm_counter.json")
-    counters    = json.loads(counter_file.read_text()) if counter_file.exists() else {}
-    sent_today  = counters.get(today, 0)
+    counters     = json.loads(counter_file.read_text()) if counter_file.exists() else {}
+    sent_today   = counters.get(today, 0)
 
     if sent_today >= DAILY_DM_LIMIT:
         log.info(f"Daily limit ({DAILY_DM_LIMIT}) already reached for {today}. Run again tomorrow.")
@@ -217,7 +248,6 @@ def run():
 
     cl = get_client()
 
-    # Shuffle industries so we don't always hit the same ones first
     industry_keys = list(HASHTAGS.keys())
     random.shuffle(industry_keys)
 
@@ -248,14 +278,12 @@ def run():
 
             if success:
                 sent_today += 1
-                # Save counter after every successful send
                 counters[today] = sent_today
                 counter_file.write_text(json.dumps(counters))
                 log.info(f"  ✓ Sent ({sent_today}/{DAILY_DM_LIMIT})")
             else:
                 log.info(f"  ✗ Failed — skipping")
 
-            # Human-like delay between DMs
             wait = random.uniform(WAIT_MIN_SECS, WAIT_MAX_SECS)
             log.info(f"  Waiting {wait:.0f}s…")
             time.sleep(wait)
