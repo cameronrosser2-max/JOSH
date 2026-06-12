@@ -1,0 +1,62 @@
+name: Josh Daily DM Outreach
+
+on:
+  schedule:
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  send-dms:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ig_session.json
+            dm_log.csv
+            dm_counter.json
+          key: josh-ig-data-${{ runner.os }}
+          restore-keys: josh-ig-data-
+
+      - name: Run DM bot
+        env:
+          IG_USERNAME: ${{ secrets.IG_USERNAME }}
+          IG_PASSWORD: ${{ secrets.IG_PASSWORD }}
+        run: python instagram_dm.py
+
+      - name: Save cache
+        if: always()
+        uses: actions/cache@v4
+        with:
+          path: |
+            ig_session.json
+            dm_log.csv
+            dm_counter.json
+          key: josh-ig-data-${{ runner.os }}
+
+      - name: Upload contact log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dm-log-${{ github.run_number }}
+          path: dm_log.csv
+          retention-days: 90

@@ -52,6 +52,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/marketing")
+def marketing():
+    return render_template("jc_marketing.html")
+
+
 @app.route("/api/leads")
 def api_leads():
     return jsonify(get_all_leads())
