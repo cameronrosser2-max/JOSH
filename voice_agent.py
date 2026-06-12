@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 import urllib.parse
 from typing import Optional
 
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify, render_template
 from flask_socketio import SocketIO
 from twilio.twiml.voice_response import VoiceResponse, Gather, Connect, Stream
 from twilio.rest import Client as TwilioClient
@@ -611,7 +611,6 @@ def _store_audio(call_sid: str, turn: str, mp3_bytes: bytes) -> str:
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────
 from crm import get_all_leads, get_leads_csv, get_stats
-from flask import jsonify, render_template
 
 
 @app.route("/")
